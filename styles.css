@@ -5,12 +5,47 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
     min-height: 100vh;
+    height: 100%;
     color: #333;
     position: relative;
+}
+
+/* Fallback for mobile browsers that don't support background-attachment: fixed */
+@supports not (background-attachment: fixed) {
+    body {
+        background-attachment: scroll;
+    }
+    
+    body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
+        z-index: -2;
+        pointer-events: none;
+    }
+}
+
+/* iOS Safari specific fix */
+@supports (-webkit-touch-callout: none) {
+    body {
+        background-attachment: scroll;
+        background-size: 100% 100vh;
+    }
 }
 
 body::before {
@@ -36,6 +71,8 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 /* Header */
@@ -65,6 +102,8 @@ body::before {
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 2;
 }
 
 .input-group {
@@ -117,6 +156,8 @@ body::before {
     padding: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     flex: 1;
+    position: relative;
+    z-index: 2;
 }
 
 .section-title {
@@ -142,7 +183,7 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
 }
 
@@ -199,6 +240,8 @@ body::before {
 .actions-section {
     display: flex;
     gap: 10px;
+    position: relative;
+    z-index: 2;
 }
 
 .action-btn {
@@ -265,9 +308,20 @@ body::before {
 
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
+    html, body {
+        height: 100%;
+        overflow-x: hidden;
+    }
+    
+    body {
+        background-size: 100% 100%;
+        background-attachment: scroll;
+    }
+    
     .container {
         padding: 15px;
         gap: 15px;
+        min-height: calc(100vh - 30px);
     }
     
     .app-title {
@@ -284,6 +338,35 @@ body::before {
     
     .actions-section {
         flex-direction: column;
+    }
+    
+    .players-list {
+        max-height: 300px;
+    }
+}
+
+/* Specific mobile browser fixes */
+@media screen and (max-width: 480px) {
+    /* Fix for Chrome mobile */
+    @supports (-webkit-appearance: none) {
+        body {
+            background: #FFB366;
+            background-image: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
+            background-attachment: scroll;
+            background-repeat: no-repeat;
+            background-size: 100% 100vh;
+        }
+    }
+    
+    /* Fix for Safari mobile */
+    @supports (-webkit-touch-callout: none) and (not (-webkit-appearance: none)) {
+        body {
+            background: #FFB366;
+            background-image: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
+            background-attachment: scroll;
+            background-repeat: no-repeat;
+            background-size: 100% 200vh;
+        }
     }
 }
 
@@ -304,4 +387,13 @@ body::before {
 
 .players-list::-webkit-scrollbar-thumb:hover {
     background: #45B7D1;
+}
+
+/* Force background on all elements to prevent white showing through */
+html {
+    background: #FFB366;
+}
+
+body {
+    background-color: #FFB366;
 }
