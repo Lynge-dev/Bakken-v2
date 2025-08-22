@@ -50,6 +50,7 @@ body {
     }
 }
 
+/* LOGO WATERMARK - CORRECTED URL */
 body::before {
     content: '';
     position: fixed;
@@ -58,7 +59,7 @@ body::before {
     transform: translate(-50%, -50%);
     width: 350px;
     height: 350px;
-    background: url('https://lynge-dev.github.io/Bakken/logo.png') center center no-repeat;
+    background: url('https://lynge-dev.github.io/Bakken-v2/logo.png') center center no-repeat;
     background-size: contain;
     opacity: 0.75;
     z-index: -1;
