@@ -23,7 +23,7 @@ body::before {
     height: 350px;
     background: url('https://lynge-dev.github.io/Bakken/logo.png') center center no-repeat;
     background-size: contain;
-    opacity: 0.25;
+    opacity: 0.55;
     z-index: -1;
     pointer-events: none;
 }

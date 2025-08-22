@@ -10,7 +10,7 @@
     <div class="container">
         <!-- Header -->
         <header class="app-header">
-            <h1 class="app-title">🏈 Håndæg og Håndbajere🏈</h1>
+            <h1 class="app-title">🏈 Håndæg og Håndbajere</h1>
             <p class="app-subtitle">Spil og Point</p>
         </header>
 
@@ -486,12 +486,22 @@
             
             completedGamesContainer.innerHTML = completedGamesList.map((game, index) => {
                 const gameData = typeof game === 'string' ? { name: game } : game;
-                const winner = gameData.results ? teams[gameData.results[1]] : null;
+                
+                // Enhanced results display with all places
+                let resultText = 'Resultat gemt';
+                if (gameData.results) {
+                    const first = teams[gameData.results[1]]?.name || 'Unknown';
+                    const second = teams[gameData.results[2]]?.name || 'Unknown';
+                    const third = teams[gameData.results[3]]?.name || 'Unknown';
+                    
+                    resultText = `🥇 ${first} | 🥈 ${second} | 🥉 ${third}`;
+                }
+                
                 return `
                     <div class="completed-game">
                         <div class="completed-game-info">
                             <div class="completed-game-name">${gameData.name}</div>
-                            <div class="completed-game-result">${winner ? `Vinder: ${winner.name}` : 'Resultat gemt'}</div>
+                            <div class="completed-game-result">${resultText}</div>
                         </div>
                         <button class="delete-game-btn" onclick="deleteGame(${index})" title="Slet spil">
                             🗑️
