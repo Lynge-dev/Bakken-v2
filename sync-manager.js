@@ -1,7 +1,7 @@
-// Supabase Sync Manager - Offline First Version
+// Supabase Sync Manager - Corrected URL
 class SyncManager {
     constructor() {
-        this.supabaseUrl = 'https://vpcfvjztjfggzsabidxr.supabase.co';
+        this.supabaseUrl = 'https://vpcfvjztjfggzsabidzr.supabase.co'; // CORRECTED URL
         this.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwY2Z2anp0amZnZ3pzYWJpZHpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzIxMzksImV4cCI6MjA3MTQ0ODEzOX0.gXNuQntHbt1QrZyMX1ihVHZeK0Qu_O3XleuWnqh5EPY';
         this.supabase = null;
         this.tournamentId = null;
@@ -311,7 +311,6 @@ class SyncManager {
     }
 
     async initialize() {
-        // App doesn't wait for this - it's always ready
         return Promise.resolve();
     }
 
