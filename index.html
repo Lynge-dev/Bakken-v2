@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Håndæg og Håndbajere - Spillere</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">🎪 Håndæg og Håndbajere</h1>
+            <p class="app-subtitle">Tilføj Spillere</p>
+        </header>
+
+        <!-- Player Input -->
+        <section class="input-section">
+            <div class="input-group">
+                <input type="text" id="playerInput" placeholder="Indtast spillernavn" maxlength="30">
+                <button id="addPlayerBtn" class="add-btn">
+                    Tilføj Spiller
+                </button>
+            </div>
+        </section>
+
+        <!-- Players List -->
+        <section class="players-section">
+            <h2 class="section-title">
+                Spillere 
+                <span class="player-count" id="playerCount">0</span>
+            </h2>
+            <div class="players-list" id="playersList">
+                <p class="empty-message">Ingen spillere tilføjet endnu</p>
+            </div>
+        </section>
+
+        <!-- Actions -->
+        <section class="actions-section">
+            <button id="clearAllBtn" class="action-btn secondary">
+                🗑️ Ryd Alle
+            </button>
+            <a href="simple-teams.html" id="continueBtn" class="action-btn primary disabled">
+                Næste: Opret Hold
+            </a>
+        </section>
+    </div>
+
+    <script>
+        // Simple player management
+        let players = [];
+
+        // DOM elements
+        const playerInput = document.getElementById('playerInput');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const playersList = document.getElementById('playersList');
+        const playerCount = document.getElementById('playerCount');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const continueBtn = document.getElementById('continueBtn');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Players page starting...');
+            loadPlayers();
+            setupEventListeners();
+            updateUI();
+        });
+
+        function loadPlayers() {
+            try {
+                const data = localStorage.getItem('bakken-players');
+                if (data) {
+                    players = JSON.parse(data);
+                    console.log('📥 Loaded players:', players);
+                }
+            } catch (e) {
+                console.error('❌ Load failed:', e);
+                players = [];
+            }
+        }
+
+        function savePlayers() {
+            try {
+                localStorage.setItem('bakken-players', JSON.stringify(players));
+                console.log('💾 Saved players:', players);
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+            }
+        }
+
+        function setupEventListeners() {
+            addPlayerBtn.addEventListener('click', addPlayer);
+            clearAllBtn.addEventListener('click', clearAllPlayers);
+            
+            playerInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addPlayer();
+                }
+            });
+            
+            playerInput.addEventListener('input', function() {
+                addPlayerBtn.disabled = this.value.trim().length === 0;
+            });
+        }
+
+        function addPlayer() {
+            const name = playerInput.value.trim();
+            
+            if (name === '') {
+                alert('Indtast et navn');
+                return;
+            }
+            
+            if (players.some(player => player.name.toLowerCase() === name.toLowerCase())) {
+                alert('Spilleren findes allerede');
+                return;
+            }
+            
+            const newPlayer = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                name: name
+            };
+            
+            players.push(newPlayer);
+            console.log('➕ Added player:', newPlayer);
+            
+            playerInput.value = '';
+            addPlayerBtn.disabled = true;
+            
+            savePlayers();
+            updateUI();
+            showMessage(`${name} tilføjet!`, '#4ECDC4');
+        }
+
+        function removePlayer(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (player && confirm(`Fjern ${player.name}?`)) {
+                players = players.filter(p => p.id !== playerId);
+                savePlayers();
+                updateUI();
+                showMessage(`${player.name} fjernet`, '#FF5252');
+            }
+        }
+
+        function clearAllPlayers() {
+            if (players.length === 0) return;
+            
+            if (confirm(`Fjern alle ${players.length} spillere?`)) {
+                players = [];
+                savePlayers();
+                updateUI();
+                showMessage('Alle spillere fjernet', '#FF5252');
+            }
+        }
+
+        function updateUI() {
+            updatePlayersList();
+            updatePlayerCount();
+            updateContinueButton();
+        }
+
+        function updatePlayersList() {
+            if (players.length === 0) {
+                playersList.innerHTML = '<p class="empty-message">Ingen spillere tilføjet endnu</p>';
+                return;
+            }
+            
+            playersList.innerHTML = players.map(player => `
+                <div class="player-item">
+                    <span class="player-name">${escapeHtml(player.name)}</span>
+                    <button class="remove-btn" onclick="removePlayer('${player.id}')">×</button>
+                </div>
+            `).join('');
+        }
+
+        function updatePlayerCount() {
+            playerCount.textContent = players.length;
+        }
+
+        function updateContinueButton() {
+            if (players.length >= 3) {
+                continueBtn.classList.remove('disabled');
+                continueBtn.style.pointerEvents = 'auto';
+            } else {
+                continueBtn.classList.add('disabled');
+                continueBtn.style.pointerEvents = 'none';
+            }
+        }
+
+        function showMessage(message, color) {
+            const existingMessage = document.querySelector('.message');
+            if (existingMessage) existingMessage.remove();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${color};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                animation: slideDown 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) messageDiv.remove();
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

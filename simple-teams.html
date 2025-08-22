@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Håndæg og Håndbajere - Hold</title>
+    <link rel="stylesheet" href="teams-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">🎪 Håndæg og Håndbajere</h1>
+            <p class="app-subtitle">Opret hold</p>
+        </header>
+
+        <!-- Navigation -->
+        <section class="navigation-section">
+            <a href="index.html" class="nav-btn secondary">
+                ← Tilbage til Spillere
+            </a>
+        </section>
+
+        <!-- Team Names Section -->
+        <section class="team-names-section">
+            <h3 class="section-title">✏️ Holdnavne</h3>
+            <div class="team-names-grid">
+                <div class="team-name-input">
+                    <label for="team1Name">Hold 1:</label>
+                    <input type="text" id="team1Name" placeholder="Indtast holdnavn" maxlength="20">
+                </div>
+                <div class="team-name-input">
+                    <label for="team2Name">Hold 2:</label>
+                    <input type="text" id="team2Name" placeholder="Indtast holdnavn" maxlength="20">
+                </div>
+                <div class="team-name-input">
+                    <label for="team3Name">Hold 3:</label>
+                    <input type="text" id="team3Name" placeholder="Indtast holdnavn" maxlength="20">
+                </div>
+            </div>
+        </section>
+
+        <!-- Controls -->
+        <section class="controls-section">
+            <div class="control-buttons">
+                <button id="randomizeBtn" class="control-btn primary">
+                    🎲 Tilfældige hold
+                </button>
+                <button id="clearTeamsBtn" class="control-btn secondary">
+                    🔄 Ryd hold
+                </button>
+            </div>
+        </section>
+
+        <!-- Unassigned Players -->
+        <section class="unassigned-section">
+            <h3 class="section-title">
+                Ikke tildelte spillere
+                <span class="player-count-badge" id="unassignedCount">0</span>
+            </h3>
+            <div id="unassignedPlayers" class="players-pool">
+                <!-- Unassigned players will appear here -->
+            </div>
+        </section>
+
+        <!-- Teams -->
+        <section class="teams-section">
+            <div class="teams-grid">
+                <!-- Team 1 -->
+                <div class="team-card" data-team="1">
+                    <div class="team-header">
+                        <div class="team-info">
+                            <div class="team-color-indicator team-1-color"></div>
+                            <h3 class="team-name" id="team1DisplayName">Hold 1</h3>
+                        </div>
+                        <span class="team-count">
+                            <span id="team1Count">0</span>/3
+                        </span>
+                    </div>
+                    <div id="team1Players" class="team-players" data-team="1">
+                        <!-- Team 1 players will appear here -->
+                    </div>
+                </div>
+
+                <!-- Team 2 -->
+                <div class="team-card" data-team="2">
+                    <div class="team-header">
+                        <div class="team-info">
+                            <div class="team-color-indicator team-2-color"></div>
+                            <h3 class="team-name" id="team2DisplayName">Hold 2</h3>
+                        </div>
+                        <span class="team-count">
+                            <span id="team2Count">0</span>/3
+                        </span>
+                    </div>
+                    <div id="team2Players" class="team-players" data-team="2">
+                        <!-- Team 2 players will appear here -->
+                    </div>
+                </div>
+
+                <!-- Team 3 -->
+                <div class="team-card" data-team="3">
+                    <div class="team-header">
+                        <div class="team-info">
+                            <div class="team-color-indicator team-3-color"></div>
+                            <h3 class="team-name" id="team3DisplayName">Hold 3</h3>
+                        </div>
+                        <span class="team-count">
+                            <span id="team3Count">0</span>/3
+                        </span>
+                    </div>
+                    <div id="team3Players" class="team-players" data-team="3">
+                        <!-- Team 3 players will appear here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Continue Button -->
+        <section class="action-section">
+            <button id="continueBtn" class="continue-btn" disabled>
+                Næste: Start Spil!
+            </button>
+            <p class="requirement-text">Alle spillere skal være på et hold</p>
+        </section>
+    </div>
+
+    <!-- Drag Ghost Element -->
+    <div id="dragGhost" class="drag-ghost"></div>
+
+    <script>
+        // Team management with simple data transfer
+        let players = [];
+        let teams = { 1: [], 2: [], 3: [] };
+        let teamNames = { 1: 'Hold 1', 2: 'Hold 2', 3: 'Hold 3' };
+
+        // Drag state
+        let isDragging = false;
+        let draggedElement = null;
+        let draggedPlayerId = null;
+        let dragGhost = null;
+        let touchStartTime = 0;
+        let longPressTimer = null;
+        let startX = 0;
+        let startY = 0;
+
+        // DOM elements
+        const randomizeBtn = document.getElementById('randomizeBtn');
+        const clearTeamsBtn = document.getElementById('clearTeamsBtn');
+        const unassignedPlayers = document.getElementById('unassignedPlayers');
+        const continueBtn = document.getElementById('continueBtn');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Teams page starting...');
+            loadData();
+            dragGhost = document.getElementById('dragGhost');
+            
+            setupEventListeners();
+            updateUI();
+        });
+
+        function loadData() {
+            // Load players
+            try {
+                const playersData = localStorage.getItem('bakken-players');
+                if (playersData) {
+                    players = JSON.parse(playersData);
+                    console.log('📥 Loaded players:', players);
+                } else {
+                    console.log('⚠️ No players found in storage');
+                    players = [];
+                }
+            } catch (e) {
+                console.error('❌ Failed to load players:', e);
+                players = [];
+            }
+
+            // Load teams
+            try {
+                const teamsData = localStorage.getItem('bakken-teams');
+                if (teamsData) {
+                    const savedData = JSON.parse(teamsData);
+                    teams = savedData.teams || { 1: [], 2: [], 3: [] };
+                    teamNames = savedData.teamNames || { 1: 'Hold 1', 2: 'Hold 2', 3: 'Hold 3' };
+                    console.log('📥 Loaded teams:', teams, teamNames);
+                }
+            } catch (e) {
+                console.error('❌ Failed to load teams:', e);
+            }
+
+            // Set team name inputs
+            document.getElementById('team1Name').value = teamNames[1];
+            document.getElementById('team2Name').value = teamNames[2];
+            document.getElementById('team3Name').value = teamNames[3];
+
+            // Update display names
+            document.getElementById('team1DisplayName').textContent = teamNames[1];
+            document.getElementById('team2DisplayName').textContent = teamNames[2];
+            document.getElementById('team3DisplayName').textContent = teamNames[3];
+        }
+
+        function saveData() {
+            try {
+                const teamsData = {
+                    teams: teams,
+                    teamNames: teamNames
+                };
+                localStorage.setItem('bakken-teams', JSON.stringify(teamsData));
+                console.log('💾 Saved teams data:', teamsData);
+            } catch (e) {
+                console.error('❌ Failed to save teams:', e);
+            }
+        }
+
+        function setupEventListeners() {
+            // Button events
+            randomizeBtn.addEventListener('click', randomizeTeams);
+            clearTeamsBtn.addEventListener('click', clearAllTeams);
+            continueBtn.addEventListener('click', function() {
+                if (isAllPlayersAssigned()) {
+                    saveData();
+                    window.location.href = 'games.html';
+                }
+            });
+
+            // Team name inputs
+            document.getElementById('team1Name').addEventListener('input', function() {
+                updateTeamName(1, this.value);
+            });
+            document.getElementById('team2Name').addEventListener('input', function() {
+                updateTeamName(2, this.value);
+            });
+            document.getElementById('team3Name').addEventListener('input', function() {
+                updateTeamName(3, this.value);
+            });
+
+            // Global drag events
+            document.addEventListener('dragover', handleDragOver);
+            document.addEventListener('drop', handleDrop);
+            document.addEventListener('dragend', handleDragEnd);
+            
+            // Touch events for mobile
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+
+        function updateTeamName(teamId, name) {
+            const displayName = name.trim() || `Hold ${teamId}`;
+            teamNames[teamId] = displayName;
+            
+            document.getElementById(`team${teamId}DisplayName`).textContent = displayName;
+            saveData();
+        }
+
+        function createPlayerChip(player, teamClass = '') {
+            const chip = document.createElement('div');
+            chip.className = `player-chip ${teamClass} just-added`;
+            chip.dataset.playerId = player.id;
+            chip.textContent = player.name;
+            chip.draggable = true;
+            
+            // Mouse events
+            chip.addEventListener('dragstart', handleDragStart);
+            
+            // Touch events
+            chip.addEventListener('touchstart', handleTouchStart, { passive: false });
+            
+            // Remove animation class after animation completes
+            setTimeout(() => chip.classList.remove('just-added'), 1000);
+            
+            return chip;
+        }
+
+        // Drag handlers
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            draggedPlayerId = e.target.dataset.playerId;
+            isDragging = true;
+            
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.outerHTML);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            
+            document.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            
+            const dropZone = findDropZone(e.target);
+            if (dropZone) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            const dropZone = findDropZone(e.target);
+            if (dropZone && draggedPlayerId) {
+                const teamNumber = dropZone.dataset.team;
+                
+                if (teamNumber) {
+                    if (teams[teamNumber].length < 3) {
+                        assignPlayerToTeam(draggedPlayerId, parseInt(teamNumber));
+                    } else {
+                        showError(`${teamNames[teamNumber]} er fuldt (3/3 spillere)`);
+                    }
+                } else if (dropZone.classList.contains('players-pool')) {
+                    removePlayerFromTeams(draggedPlayerId);
+                }
+            }
+            
+            cleanupDrag();
+        }
+
+        function handleDragEnd(e) {
+            cleanupDrag();
+        }
+
+        // Touch handlers
+        function handleTouchStart(e) {
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            touchStartTime = Date.now();
+            
+            longPressTimer = setTimeout(() => {
+                startTouchDrag(e.target, touch);
+            }, 500);
+        }
+
+        function startTouchDrag(element, touch) {
+            draggedElement = element;
+            draggedPlayerId = element.dataset.playerId;
+            isDragging = true;
+            
+            element.classList.add('dragging');
+            
+            dragGhost.textContent = element.textContent;
+            dragGhost.style.left = touch.clientX - 50 + 'px';
+            dragGhost.style.top = touch.clientY - 25 + 'px';
+            dragGhost.classList.add('visible');
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (longPressTimer) {
+                const touch = e.touches[0];
+                const deltaX = Math.abs(touch.clientX - startX);
+                const deltaY = Math.abs(touch.clientY - startY);
+                
+                if (deltaX > 10 || deltaY > 10) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+            
+            if (isDragging && dragGhost) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                
+                dragGhost.style.left = touch.clientX - 50 + 'px';
+                dragGhost.style.top = touch.clientY - 25 + 'px';
+                
+                document.querySelectorAll('.drag-over').forEach(el => {
+                    el.classList.remove('drag-over');
+                });
+                
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const dropZone = findDropZone(elementBelow);
+                
+                if (dropZone) {
+                    dropZone.classList.add('drag-over');
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            
+            if (isDragging) {
+                const touch = e.changedTouches[0];
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const dropZone = findDropZone(elementBelow);
+                
+                if (dropZone && draggedPlayerId) {
+                    const teamNumber = dropZone.dataset.team;
+                    
+                    if (teamNumber) {
+                        if (teams[teamNumber].length < 3) {
+                            assignPlayerToTeam(draggedPlayerId, parseInt(teamNumber));
+                        } else {
+                            showError(`${teamNames[teamNumber]} er fuldt (3/3 spillere)`);
+                        }
+                    } else if (dropZone.classList.contains('players-pool')) {
+                        removePlayerFromTeams(draggedPlayerId);
+                    }
+                }
+                
+                cleanupDrag();
+            }
+        }
+
+        function findDropZone(element) {
+            if (!element) return null;
+            
+            if (element.classList.contains('team-players')) {
+                return element;
+            }
+            
+            const teamCard = element.closest('.team-card');
+            if (teamCard) {
+                return teamCard.querySelector('.team-players');
+            }
+            
+            if (element.classList.contains('players-pool') || element.closest('.players-pool')) {
+                return document.getElementById('unassignedPlayers');
+            }
+            
+            return null;
+        }
+
+        function cleanupDrag() {
+            isDragging = false;
+            draggedElement = null;
+            draggedPlayerId = null;
+            
+            document.querySelectorAll('.dragging').forEach(el => {
+                el.classList.remove('dragging');
+            });
+            
+            document.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            
+            if (dragGhost) {
+                dragGhost.classList.remove('visible');
+            }
+        }
+
+        function assignPlayerToTeam(playerId, teamNumber) {
+            // Remove from all teams first
+            Object.keys(teams).forEach(team => {
+                teams[team] = teams[team].filter(id => id !== playerId);
+            });
+            
+            // Add to new team
+            teams[teamNumber].push(playerId);
+            console.log(`➕ Assigned player ${playerId} to team ${teamNumber}`);
+            
+            saveData();
+            updateUI();
+        }
+
+        function removePlayerFromTeams(playerId) {
+            Object.keys(teams).forEach(team => {
+                teams[team] = teams[team].filter(id => id !== playerId);
+            });
+            console.log(`➖ Removed player ${playerId} from all teams`);
+            
+            saveData();
+            updateUI();
+        }
+
+        function randomizeTeams() {
+            clearAllTeams();
+            const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+            
+            shuffledPlayers.forEach((player, index) => {
+                const teamNumber = (index % 3) + 1;
+                teams[teamNumber].push(player.id);
+            });
+            
+            console.log('🎲 Randomized teams:', teams);
+            saveData();
+            updateUI();
+        }
+
+        function clearAllTeams() {
+            teams = { 1: [], 2: [], 3: [] };
+            saveData();
+            updateUI();
+        }
+
+        function updateUI() {
+            updateUnassignedPlayers();
+            updateTeams();
+            updateContinueButton();
+        }
+
+        function updateUnassignedPlayers() {
+            const assignedPlayerIds = [...teams[1], ...teams[2], ...teams[3]];
+            const unassigned = players.filter(player => !assignedPlayerIds.includes(player.id));
+            
+            document.getElementById('unassignedCount').textContent = unassigned.length;
+            
+            const container = document.getElementById('unassignedPlayers');
+            container.innerHTML = '';
+            
+            if (unassigned.length === 0) {
+                container.className = 'players-pool empty';
+                return;
+            }
+            
+            container.className = 'players-pool';
+            unassigned.forEach(player => {
+                container.appendChild(createPlayerChip(player));
+            });
+        }
+
+        function updateTeams() {
+            [1, 2, 3].forEach(teamNumber => {
+                const container = document.getElementById(`team${teamNumber}Players`);
+                const counter = document.getElementById(`team${teamNumber}Count`);
+                
+                counter.textContent = teams[teamNumber].length;
+                container.innerHTML = '';
+                
+                if (teams[teamNumber].length === 0) {
+                    container.className = 'team-players empty';
+                    return;
+                }
+                
+                container.className = 'team-players';
+                teams[teamNumber].forEach(playerId => {
+                    const player = players.find(p => p.id === playerId);
+                    if (player) {
+                        container.appendChild(createPlayerChip(player, `in-team-${teamNumber}`));
+                    } else {
+                        console.warn(`⚠️ Player with ID ${playerId} not found`);
+                    }
+                });
+            });
+        }
+
+        function updateContinueButton() {
+            const allAssigned = isAllPlayersAssigned();
+            continueBtn.disabled = !allAssigned;
+            
+            const requirementText = document.querySelector('.requirement-text');
+            if (allAssigned && players.length > 0) {
+                requirementText.textContent = 'Alle spillere er tildelt! Klar til at starte! 🎉';
+                requirementText.style.color = 'rgba(255, 255, 255, 0.9)';
+            } else if (players.length === 0) {
+                requirementText.textContent = 'Tilføj spillere først';
+                requirementText.style.color = 'rgba(255, 255, 255, 0.6)';
+            } else {
+                const unassignedCount = players.length - getTotalAssignedPlayers();
+                requirementText.textContent = `${unassignedCount} spiller${unassignedCount === 1 ? '' : 'e'} mangler at blive tildelt`;
+                requirementText.style.color = 'rgba(255, 255, 255, 0.6)';
+            }
+        }
+
+        function isAllPlayersAssigned() {
+            return getTotalAssignedPlayers() === players.length && players.length > 0;
+        }
+
+        function getTotalAssignedPlayers() {
+            return teams[1].length + teams[2].length + teams[3].length;
+        }
+
+        function showError(message) {
+            const existingError = document.querySelector('.error-message');
+            if (existingError) existingError.remove();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #FF5252;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 3000;
+                animation: slideDown 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                if (errorDiv.parentNode) errorDiv.remove();
+            }, 3000);
+        }
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
