@@ -19,11 +19,11 @@ body::before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 300px;
-    height: 300px;
+    width: 350px;
+    height: 350px;
     background: url('https://lynge-dev.github.io/Bakken/logo.png') center center no-repeat;
     background-size: contain;
-    opacity: 0.15;
+    opacity: 0.25;
     z-index: -1;
     pointer-events: none;
 }
