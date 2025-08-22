@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+    background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
     min-height: 100vh;
     color: #333;
     position: relative;
@@ -295,7 +295,7 @@ body::before {
 }
 
 .delete-game-btn {
-    background: #FF6B6B;
+    background: #FFB366;
     color: white;
     border: none;
     border-radius: 6px;
@@ -306,7 +306,7 @@ body::before {
 }
 
 .delete-game-btn:hover {
-    background: #FF5252;
+    background: #FF9A42;
     transform: scale(1.1);
 }
 

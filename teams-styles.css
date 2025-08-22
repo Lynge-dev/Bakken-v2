@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+    background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
     min-height: 100vh;
     color: #333;
     overflow-x: hidden;
@@ -186,7 +186,7 @@ body::before {
 }
 
 .player-count-badge {
-    background: #FF6B6B;
+    background: #FFB366;
     color: white;
     padding: 3px 8px;
     border-radius: 10px;
@@ -264,7 +264,7 @@ body::before {
     border-radius: 50%;
 }
 
-.team-1-color { background: #FF6B6B; }
+.team-1-color { background: #FFB366; }
 .team-2-color { background: #4ECDC4; }
 .team-3-color { background: #45B7D1; }
 
@@ -343,8 +343,8 @@ body::before {
 }
 
 .player-chip.in-team-1 {
-    border-color: #FF6B6B;
-    background: rgba(255, 107, 107, 0.1);
+    border-color: #FFB366;
+    background: rgba(255, 179, 102, 0.1);
 }
 
 .player-chip.in-team-2 {

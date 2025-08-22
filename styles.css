@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+    background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
     min-height: 100vh;
     color: #333;
     position: relative;
@@ -169,7 +169,7 @@ body::before {
 }
 
 .remove-btn {
-    background: #FF6B6B;
+    background: #FFB366;
     color: white;
     border: none;
     border-radius: 50%;
@@ -184,7 +184,7 @@ body::before {
 }
 
 .remove-btn:hover {
-    background: #FF5252;
+    background: #FF9A42;
     transform: scale(1.1);
 }
 
@@ -238,8 +238,8 @@ body::before {
 
 .action-btn.secondary:hover {
     background: #fff;
-    border-color: #FF6B6B;
-    color: #FF6B6B;
+    border-color: #FFB366;
+    color: #FFB366;
     transform: translateY(-2px);
 }
 
