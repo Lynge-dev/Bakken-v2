@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Håndæg og Håndbajere - Fotos</title>
+    <link rel="stylesheet" href="photos-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">🎪 Håndæg og Håndbajere</h1>
+            <p class="app-subtitle">Fotos og Minder</p>
+        </header>
+
+        <!-- Navigation -->
+        <section class="navigation-section">
+            <a href="games.html" class="nav-btn secondary">
+                ← Tilbage til Spil
+            </a>
+        </section>
+
+        <!-- Photo Mode Selector -->
+        <section class="mode-selector">
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="group">
+                    👨‍👩‍👧‍👦 Gruppefoto
+                </button>
+                <button class="mode-tab" data-mode="teams">
+                    👥 Hold Fotos
+                </button>
+                <button class="mode-tab" data-mode="export">
+                    📤 Eksporter
+                </button>
+            </div>
+        </section>
+
+        <!-- Group Photo Mode -->
+        <section id="groupMode" class="photo-mode active">
+            <h2 class="section-title">📸 Gruppefoto - Alle Sammen</h2>
+            
+            <div class="photo-card group-photo-card">
+                <div class="photo-preview" id="groupPhotoPreview">
+                    <div class="photo-placeholder">
+                        <div class="placeholder-icon">📷</div>
+                        <p>Tag et gruppefoto af alle spillere</p>
+                        <small>Tryk på kamera-knappen nedenfor</small>
+                    </div>
+                </div>
+                
+                <div class="photo-info">
+                    <h3>Alle Spillere</h3>
+                    <p class="participants-list" id="allParticipants">
+                        <!-- Will be populated with all player names -->
+                    </p>
+                </div>
+                
+                <div class="photo-actions">
+                    <button class="photo-btn camera" id="takeGroupPhoto">
+                        📷 Tag Foto
+                    </button>
+                    <button class="photo-btn upload" id="uploadGroupPhoto">
+                        📁 Upload Foto
+                    </button>
+                    <button class="photo-btn delete" id="deleteGroupPhoto" style="display: none;">
+                        🗑️ Slet Foto
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Photos Mode -->
+        <section id="teamsMode" class="photo-mode">
+            <h2 class="section-title">👥 Holdfotos</h2>
+            <div class="teams-photo-grid" id="teamsPhotoGrid">
+                <!-- Team photo cards will be generated here -->
+            </div>
+        </section>
+
+        <!-- Export Mode -->
+        <section id="exportMode" class="photo-mode">
+            <h2 class="section-title">📤 Eksporter Resultater</h2>
+            
+            <div class="export-options">
+                <div class="export-card">
+                    <h3>🏆 Slutresultater</h3>
+                    <p>Eksporter den endelige rangliste med alle spil og point</p>
+                    <button class="export-btn" id="exportResults">
+                        📊 Eksporter Resultater
+                    </button>
+                </div>
+
+                <div class="export-card">
+                    <h3>📸 Alle Fotos</h3>
+                    <p>Download alle fotos (gruppefoto + holdfotos) som ZIP fil</p>
+                    <button class="export-btn" id="exportPhotos">
+                        🖼️ Eksporter Fotos
+                    </button>
+                </div>
+
+                <div class="export-card">
+                    <h3>📱 Del Komplet Rapport</h3>
+                    <p>Lav en flot rapport med fotos og resultater til deling</p>
+                    <button class="export-btn primary" id="exportComplete">
+                        🎉 Lav Komplet Rapport
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export Preview -->
+            <div class="export-preview" id="exportPreview" style="display: none;">
+                <h3>📋 Forhåndsvisning</h3>
+                <div class="preview-content" id="previewContent">
+                    <!-- Generated report preview will appear here -->
+                </div>
+                <div class="preview-actions">
+                    <button class="export-btn" id="downloadReport">
+                        💾 Download Rapport
+                    </button>
+                    <button class="export-btn" id="shareReport">
+                        📤 Del Rapport
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="groupFileInput" accept="image/*" capture="environment" style="display: none;">
+    <input type="file" id="teamFileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <!-- Photo Modal -->
+    <div id="photoModal" class="photo-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Foto</h3>
+                <button id="closePhotoModal" class="close-btn">×</button>
+            </div>
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="Foto">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Photo management system with real data integration
+        let groupPhoto = null;
+        let teamPhotos = { 1: null, 2: null, 3: null };
+        let teams = {};
+        let players = [];
+        let completedGames = [];
+
+        // DOM elements
+        const modeTabs = document.querySelectorAll('.mode-tab');
+        const photoModes = document.querySelectorAll('.photo-mode');
+        const groupPhotoPreview = document.getElementById('groupPhotoPreview');
+        const allParticipants = document.getElementById('allParticipants');
+        const teamsPhotoGrid = document.getElementById('teamsPhotoGrid');
+        const groupFileInput = document.getElementById('groupFileInput');
+        const teamFileInput = document.getElementById('teamFileInput');
+        const photoModal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalTitle = document.getElementById('modalTitle');
+
+        let currentTeamForPhoto = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📸 Photos page loaded');
+            loadRealData();
+            setupEventListeners();
+            renderAllParticipants();
+            renderTeamPhotoCards();
+            updateGroupPhotoDisplay();
+        });
+
+        function loadRealData() {
+            console.log('📥 Loading real data for photos...');
+            
+            // Load players
+            try {
+                const playersData = localStorage.getItem('bakken-players');
+                if (playersData) {
+                    players = JSON.parse(playersData);
+                    console.log('✅ Loaded players for photos:', players);
+                }
+            } catch (e) {
+                console.error('❌ Failed to load players:', e);
+                players = [];
+            }
+
+            // Load teams
+            try {
+                const teamsData = localStorage.getItem('bakken-teams');
+                if (teamsData) {
+                    const teamInfo = JSON.parse(teamsData);
+                    const teamAssignments = teamInfo.teams || {};
+                    const teamNames = teamInfo.teamNames || {};
+                    
+                    // Convert to format photos expects
+                    teams = {};
+                    [1, 2, 3].forEach(teamId => {
+                        const playerIds = teamAssignments[teamId] || [];
+                        const teamMembers = playerIds.map(playerId => {
+                            const player = players.find(p => p.id === playerId);
+                            return player ? player.name : 'Unknown';
+                        }).filter(name => name !== 'Unknown');
+                        
+                        teams[teamId] = {
+                            name: teamNames[teamId] || `Hold ${teamId}`,
+                            members: teamMembers
+                        };
+                    });
+                    
+                    console.log('✅ Loaded teams for photos:', teams);
+                }
+            } catch (e) {
+                console.error('❌ Failed to load teams:', e);
+                teams = {
+                    1: { name: 'Hold 1', members: [] },
+                    2: { name: 'Hold 2', members: [] },
+                    3: { name: 'Hold 3', members: [] }
+                };
+            }
+
+            // Load completed games
+            try {
+                const gamesData = localStorage.getItem('bakken-games');
+                if (gamesData) {
+                    const gameInfo = JSON.parse(gamesData);
+                    completedGames = gameInfo.completedGames || [];
+                    console.log('✅ Loaded completed games:', completedGames);
+                }
+            } catch (e) {
+                console.error('❌ Failed to load games:', e);
+                completedGames = [];
+            }
+
+            // Load existing photos
+            try {
+                const photosData = localStorage.getItem('bakken-photos');
+                if (photosData) {
+                    const photoInfo = JSON.parse(photosData);
+                    groupPhoto = photoInfo.groupPhoto || null;
+                    teamPhotos = photoInfo.teamPhotos || { 1: null, 2: null, 3: null };
+                    console.log('✅ Loaded existing photos');
+                }
+            } catch (e) {
+                console.error('❌ Failed to load photos:', e);
+            }
+        }
+
+        function savePhotos() {
+            try {
+                const photoData = {
+                    groupPhoto: groupPhoto,
+                    teamPhotos: teamPhotos
+                };
+                localStorage.setItem('bakken-photos', JSON.stringify(photoData));
+                console.log('💾 Saved photos');
+            } catch (e) {
+                console.error('❌ Failed to save photos:', e);
+            }
+        }
+
+        function setupEventListeners() {
+            // Mode tabs
+            modeTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    switchMode(this.dataset.mode);
+                });
+            });
+
+            // Group photo actions
+            document.getElementById('takeGroupPhoto').addEventListener('click', function() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    groupFileInput.click();
+                } else {
+                    alert('Kamera ikke tilgængeligt. Brug upload i stedet.');
+                }
+            });
+
+            document.getElementById('uploadGroupPhoto').addEventListener('click', function() {
+                groupFileInput.click();
+            });
+
+            document.getElementById('deleteGroupPhoto').addEventListener('click', function() {
+                if (confirm('Er du sikker på at du vil slette gruppefotos?')) {
+                    groupPhoto = null;
+                    savePhotos();
+                    updateGroupPhotoDisplay();
+                }
+            });
+
+            // File inputs
+            groupFileInput.addEventListener('change', handleGroupPhotoUpload);
+            teamFileInput.addEventListener('change', handleTeamPhotoUpload);
+
+            // Photo modal
+            document.getElementById('closePhotoModal').addEventListener('click', closePhotoModal);
+            photoModal.addEventListener('click', function(e) {
+                if (e.target === photoModal) {
+                    closePhotoModal();
+                }
+            });
+
+            // Export functions
+            document.getElementById('exportResults').addEventListener('click', exportResults);
+            document.getElementById('exportPhotos').addEventListener('click', exportPhotos);
+            document.getElementById('exportComplete').addEventListener('click', exportComplete);
+        }
+
+        function switchMode(mode) {
+            // Update tabs
+            modeTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.mode === mode);
+            });
+
+            // Update content
+            photoModes.forEach(modeElement => {
+                modeElement.classList.toggle('active', modeElement.id === mode + 'Mode');
+            });
+        }
+
+        function renderAllParticipants() {
+            const allPlayers = players.map(p => p.name);
+            allParticipants.textContent = allPlayers.join(', ') || 'Ingen spillere fundet';
+        }
+
+        function renderTeamPhotoCards() {
+            teamsPhotoGrid.innerHTML = Object.entries(teams).map(([teamId, team]) => `
+                <div class="team-photo-card">
+                    <div class="team-photo-preview" onclick="viewTeamPhoto(${teamId})">
+                        ${teamPhotos[teamId] ? 
+                            `<img src="${teamPhotos[teamId]}" alt="${team.name} foto">` :
+                            `<div class="team-photo-placeholder">📷</div>`
+                        }
+                    </div>
+                    <div class="team-photo-info">
+                        <h3>
+                            <span class="team-color-indicator team-${teamId}-color"></span>
+                            ${team.name}
+                        </h3>
+                        <div class="team-members">${team.members.join(', ') || 'Ingen medlemmer'}</div>
+                        <div class="team-photo-actions">
+                            <button class="team-photo-btn camera" onclick="takeTeamPhoto(${teamId})">
+                                📷 Tag Foto
+                            </button>
+                            <button class="team-photo-btn upload" onclick="uploadTeamPhoto(${teamId})">
+                                📁 Upload
+                            </button>
+                            ${teamPhotos[teamId] ? 
+                                `<button class="team-photo-btn delete" onclick="deleteTeamPhoto(${teamId})">🗑️ Slet</button>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateGroupPhotoDisplay() {
+            const deleteBtn = document.getElementById('deleteGroupPhoto');
+            
+            if (groupPhoto) {
+                groupPhotoPreview.innerHTML = `<img src="${groupPhoto}" alt="Gruppefoto" onclick="viewGroupPhoto()">`;
+                deleteBtn.style.display = 'inline-block';
+            } else {
+                groupPhotoPreview.innerHTML = `
+                    <div class="photo-placeholder" onclick="document.getElementById('groupFileInput').click()">
+                        <div class="placeholder-icon">📷</div>
+                        <p>Tag et gruppefoto af alle spillere</p>
+                        <small>Tryk på kamera-knappen nedenfor</small>
+                    </div>
+                `;
+                deleteBtn.style.display = 'none';
+            }
+        }
+
+        function handleGroupPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    groupPhoto = e.target.result;
+                    savePhotos();
+                    updateGroupPhotoDisplay();
+                    showMessage('Gruppefoto uploaded! 📸');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleTeamPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file && currentTeamForPhoto) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    teamPhotos[currentTeamForPhoto] = e.target.result;
+                    savePhotos();
+                    renderTeamPhotoCards();
+                    showMessage(`${teams[currentTeamForPhoto].name} foto uploaded! 📸`);
+                    currentTeamForPhoto = null;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function takeTeamPhoto(teamId) {
+            currentTeamForPhoto = teamId;
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                teamFileInput.click();
+            } else {
+                alert('Kamera ikke tilgængeligt. Brug upload i stedet.');
+            }
+        }
+
+        function uploadTeamPhoto(teamId) {
+            currentTeamForPhoto = teamId;
+            teamFileInput.click();
+        }
+
+        function deleteTeamPhoto(teamId) {
+            if (confirm(`Er du sikker på at du vil slette ${teams[teamId].name} foto?`)) {
+                teamPhotos[teamId] = null;
+                savePhotos();
+                renderTeamPhotoCards();
+                showMessage('Foto slettet');
+            }
+        }
+
+        function viewTeamPhoto(teamId) {
+            if (teamPhotos[teamId]) {
+                modalImage.src = teamPhotos[teamId];
+                modalTitle.textContent = `${teams[teamId].name} Foto`;
+                photoModal.classList.add('active');
+            }
+        }
+
+        function viewGroupPhoto() {
+            if (groupPhoto) {
+                modalImage.src = groupPhoto;
+                modalTitle.textContent = 'Gruppefoto';
+                photoModal.classList.add('active');
+            }
+        }
+
+        function closePhotoModal() {
+            photoModal.classList.remove('active');
+        }
+
+        // Export functions
+        function exportResults() {
+            // Load final scores from games
+            const gamesData = localStorage.getItem('bakken-games');
+            let teamScores = { 1: 0, 2: 0, 3: 0 };
+            
+            if (gamesData) {
+                const gameInfo = JSON.parse(gamesData);
+                teamScores = gameInfo.teamScores || teamScores;
+            }
+            
+            const sortedTeams = Object.entries(teams)
+                .map(([id, team]) => ({
+                    id,
+                    name: team.name,
+                    members: team.members,
+                    score: teamScores[id] || 0
+                }))
+                .sort((a, b) => b.score - a.score);
+            
+            let resultsText = `🎪 HÅNDÆG OG HÅNDBAJERE - RESULTATER\n`;
+            resultsText += `=====================================\n\n`;
+            
+            resultsText += `🏆 SLUTSTILLING:\n`;
+            sortedTeams.forEach((team, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                resultsText += `${medal} ${index + 1}. ${team.name} - ${team.score} point\n`;
+                resultsText += `   Spillere: ${team.members.join(', ')}\n\n`;
+            });
+            
+            resultsText += `🎯 GENNEMFØRTE SPIL:\n`;
+            completedGames.forEach((game, index) => {
+                const gameName = typeof game === 'string' ? game : game.name;
+                resultsText += `${index + 1}. ${gameName}\n`;
+            });
+            
+            resultsText += `\n📅 Dato: ${new Date().toLocaleDateString('da-DK')}\n`;
+            
+            downloadTextFile(resultsText, 'bakken-resultater.txt');
+            showMessage('Resultater eksporteret! 📊');
+        }
+
+        function exportPhotos() {
+            let photosList = [];
+            
+            if (groupPhoto) photosList.push('Gruppefoto.jpg');
+            
+            Object.entries(teamPhotos).forEach(([teamId, photo]) => {
+                if (photo) photosList.push(`${teams[teamId].name}.jpg`);
+            });
+            
+            if (photosList.length === 0) {
+                alert('Ingen fotos at eksportere. Tag nogle fotos først!');
+                return;
+            }
+            
+            alert(`Ville eksportere ${photosList.length} fotos:\n\n${photosList.join('\n')}\n\n(I en rigtig app ville dette downloade en ZIP fil)`);
+        }
+
+        function exportComplete() {
+            generateCompleteReport();
+        }
+
+        function generateCompleteReport() {
+            // Load final scores
+            const gamesData = localStorage.getItem('bakken-games');
+            let teamScores = { 1: 0, 2: 0, 3: 0 };
+            
+            if (gamesData) {
+                const gameInfo = JSON.parse(gamesData);
+                teamScores = gameInfo.teamScores || teamScores;
+            }
+            
+            const sortedTeams = Object.entries(teams)
+                .map(([id, team]) => ({
+                    id,
+                    name: team.name,
+                    members: team.members,
+                    score: teamScores[id] || 0
+                }))
+                .sort((a, b) => b.score - a.score);
+            
+            const reportHtml = `
+                <!DOCTYPE html>
+                <html lang="da">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Håndæg og Håndbajere - Rapport</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .standings { margin-bottom: 30px; }
+                        .team { padding: 15px; margin: 10px 0; border-radius: 10px; }
+                        .team.first { background: linear-gradient(90deg, rgba(255,215,0,0.2), #f8f9fa); }
+                        .team.second { background: linear-gradient(90deg, rgba(192,192,192,0.2), #f8f9fa); }
+                        .team.third { background: linear-gradient(90deg, rgba(205,127,50,0.2), #f8f9fa); }
+                        .photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+                        .photo { text-align: center; }
+                        .photo img { max-width: 100%; border-radius: 10px; }
+                        .games { margin-top: 30px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>🎪 Håndæg og Håndbajere</h1>
+                        <h2>Bakken ${new Date().getFullYear()}</h2>
+                        <p>Dato: ${new Date().toLocaleDateString('da-DK')}</p>
+                    </div>
+                    
+                    <div class="standings">
+                        <h2>🏆 Slutstilling</h2>
+                        ${sortedTeams.map((team, index) => {
+                            const positionClass = index === 0 ? 'first' : index === 1 ? 'second' : 'third';
+                            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            return `
+                                <div class="team ${positionClass}">
+                                    <h3>${medal} ${index + 1}. ${team.name} - ${team.score} point</h3>
+                                    <p>Spillere: ${team.members.join(', ')}</p>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    
+                    ${(groupPhoto || Object.values(teamPhotos).some(p => p)) ? `
+                        <div class="photos">
+                            <h2>📸 Fotos</h2>
+                            ${groupPhoto ? `
+                                <div class="photo">
+                                    <img src="${groupPhoto}" alt="Gruppefoto">
+                                    <p>Alle sammen</p>
+                                </div>
+                            ` : ''}
+                            ${Object.entries(teamPhotos).map(([teamId, photo]) => 
+                                photo ? `
+                                    <div class="photo">
+                                        <img src="${photo}" alt="${teams[teamId].name}">
+                                        <p>${teams[teamId].name}</p>
+                                    </div>
+                                ` : ''
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="games">
+                        <h2>🎯 Gennemførte Spil</h2>
+                        <ol>
+                            ${completedGames.map(game => {
+                                const gameName = typeof game === 'string' ? game : game.name;
+                                return `<li>${gameName}</li>`;
+                            }).join('')}
+                        </ol>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Show preview
+            document.getElementById('previewContent').innerHTML = reportHtml;
+            document.getElementById('exportPreview').style.display = 'block';
+            
+            // Setup download
+            document.getElementById('downloadReport').onclick = function() {
+                downloadTextFile(reportHtml, 'bakken-rapport.html');
+            };
+            
+            document.getElementById('shareReport').onclick = function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Håndæg og Håndbajere - Rapport',
+                        text: 'Se vores Bakken resultater!',
+                        url: window.location.href
+                    });
+                } else {
+                    alert('Del funktionen er ikke tilgængelig i denne browser');
+                }
+            };
+            
+            showMessage('Rapport genereret! 📋');
+        }
+
+        function downloadTextFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #4ECDC4;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 3000;
+                animation: slideDown 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) messageDiv.remove();
+            }, 3000);
+        }
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
