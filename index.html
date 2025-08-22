@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Håndæg og Håndbajere - Spillere</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="sync-manager.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="app-header">
-            <h1 class="app-title">Håndæg og Håndbajere</h1>
-            <p class="app-subtitle">Spil og Point</p>
+            <h1 class="app-title">🏈 Håndæg og Håndbajere</h1>
+            <p class="app-subtitle">Tilføj Spillere</p>
+            <div class="sync-status" id="syncStatus">
+                <span class="status-indicator" id="statusIndicator">🔄</span>
+                <span class="status-text" id="statusText">Connecting...</span>
+            </div>
         </header>
 
         <!-- Player Input -->
@@ -47,7 +53,7 @@
     </div>
 
     <script>
-        // Simple player management
+        // Enhanced player management with sync
         let players = [];
 
         // DOM elements
@@ -57,6 +63,9 @@
         const playerCount = document.getElementById('playerCount');
         const clearAllBtn = document.getElementById('clearAllBtn');
         const continueBtn = document.getElementById('continueBtn');
+        const syncStatus = document.getElementById('syncStatus');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -64,6 +73,15 @@
             loadPlayers();
             setupEventListeners();
             updateUI();
+            updateSyncStatus();
+            
+            // Initialize sync
+            if (window.syncManager) {
+                window.syncManager.initialize().then(() => {
+                    loadPlayers(); // Reload in case cloud data was merged
+                    updateUI();
+                });
+            }
         });
 
         function loadPlayers() {
@@ -82,7 +100,13 @@
         function savePlayers() {
             try {
                 localStorage.setItem('bakken-players', JSON.stringify(players));
-                console.log('💾 Saved players:', players);
+                localStorage.setItem('bakken-players-last-update', Date.now().toString());
+                console.log('💾 Saved players locally:', players);
+                
+                // Sync to cloud
+                if (window.syncManager) {
+                    window.syncManager.syncPlayers(players);
+                }
             } catch (e) {
                 console.error('❌ Save failed:', e);
             }
@@ -101,6 +125,24 @@
             playerInput.addEventListener('input', function() {
                 addPlayerBtn.disabled = this.value.trim().length === 0;
             });
+
+            // Listen for remote data updates
+            window.addEventListener('bakken-data-updated', function(event) {
+                if (event.detail.table === 'players' && event.detail.source === 'remote') {
+                    loadPlayers();
+                    updateUI();
+                    showMessage('🔄 Players updated from another device', '#45B7D1');
+                }
+            });
+
+            // Listen for data loaded from cloud
+            window.addEventListener('bakken-data-loaded', function() {
+                loadPlayers();
+                updateUI();
+            });
+
+            // Update sync status periodically
+            setInterval(updateSyncStatus, 5000);
         }
 
         function addPlayer() {
@@ -138,7 +180,7 @@
                 players = players.filter(p => p.id !== playerId);
                 savePlayers();
                 updateUI();
-                showMessage(`${player.name} fjernet`, '#FF5252');
+                showMessage(`${player.name} fjernet`, '#FF9A42');
             }
         }
 
@@ -149,7 +191,7 @@
                 players = [];
                 savePlayers();
                 updateUI();
-                showMessage('Alle spillere fjernet', '#FF5252');
+                showMessage('Alle spillere fjernet', '#FF9A42');
             }
         }
 
@@ -184,6 +226,29 @@
             } else {
                 continueBtn.classList.add('disabled');
                 continueBtn.style.pointerEvents = 'none';
+            }
+        }
+
+        function updateSyncStatus() {
+            if (window.syncManager) {
+                const status = window.syncManager.getStatus();
+                
+                if (!status.initialized) {
+                    statusIndicator.textContent = '🔄';
+                    statusText.textContent = 'Connecting...';
+                } else if (!status.online) {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Offline';
+                } else if (status.pendingSync > 0) {
+                    statusIndicator.textContent = '⏳';
+                    statusText.textContent = `Syncing ${status.pendingSync}...`;
+                } else {
+                    statusIndicator.textContent = '☁️';
+                    statusText.textContent = 'Synced';
+                }
+            } else {
+                statusIndicator.textContent = '📱';
+                statusText.textContent = 'Local only';
             }
         }
 
