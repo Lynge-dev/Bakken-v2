@@ -229,28 +229,35 @@
             }
         }
 
-        function updateSyncStatus() {
-            if (window.syncManager) {
-                const status = window.syncManager.getStatus();
-                
-                if (!status.initialized) {
-                    statusIndicator.textContent = '🔄';
-                    statusText.textContent = 'Connecting...';
-                } else if (!status.online) {
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Offline';
-                } else if (status.pendingSync > 0) {
-                    statusIndicator.textContent = '⏳';
-                    statusText.textContent = `Syncing ${status.pendingSync}...`;
-                } else {
-                    statusIndicator.textContent = '☁️';
-                    statusText.textContent = 'Synced';
-                }
-            } else {
-                statusIndicator.textContent = '📱';
-                statusText.textContent = 'Local only';
-            }
+// Enhanced status update function
+function updateSyncStatus() {
+    if (window.syncManager) {
+        const status = window.syncManager.getStatus();
+        
+        if (!status.initialized) {
+            statusIndicator.textContent = '🔄';
+            statusText.textContent = 'Connecting...';
+        } else if (!status.hasSupabase) {
+            statusIndicator.textContent = '📱';
+            statusText.textContent = 'Local only';
+        } else if (!status.online) {
+            statusIndicator.textContent = '📱';
+            statusText.textContent = 'Offline';
+        } else if (status.pendingSync > 0) {
+            statusIndicator.textContent = '⏳';
+            statusText.textContent = `Syncing ${status.pendingSync}...`;
+        } else {
+            statusIndicator.textContent = '☁️';
+            statusText.textContent = 'Synced';
         }
+    } else {
+        statusIndicator.textContent = '📱';
+        statusText.textContent = 'Local only';
+    }
+}
+
+// Listen for status changes
+window.addEventListener('sync-status-changed', updateSyncStatus);
 
         function showMessage(message, color) {
             const existingMessage = document.querySelector('.message');

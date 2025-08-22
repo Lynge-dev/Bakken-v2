@@ -1,4 +1,4 @@
-// Supabase Sync Manager for Bakken App
+// Supabase Sync Manager for Bakken App - Enhanced Version
 class SyncManager {
     constructor() {
         this.supabaseUrl = 'https://vpcfvjztjfggzsabidxr.supabase.co';
@@ -8,30 +8,61 @@ class SyncManager {
         this.isOnline = navigator.onLine;
         this.syncQueue = [];
         this.isInitialized = false;
+        this.connectionAttempts = 0;
+        this.maxConnectionAttempts = 3;
         
         this.init();
     }
 
     async init() {
         try {
-            // Initialize Supabase client
-            if (typeof window.supabase !== 'undefined') {
-                this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
-                console.log('✅ Supabase client initialized');
-                
-                await this.setupTournament();
-                this.setupRealtimeSubscriptions();
-                this.setupOfflineHandling();
-                this.isInitialized = true;
-                
-                console.log('🚀 Sync Manager fully initialized');
-            } else {
-                console.warn('⚠️ Supabase not loaded, running in offline mode');
-                setTimeout(() => this.init(), 1000); // Retry in 1 second
+            console.log('🔄 Initializing Sync Manager...');
+            
+            // Check if Supabase is loaded
+            if (typeof window.supabase === 'undefined') {
+                console.warn('⚠️ Supabase not loaded yet, retrying...');
+                if (this.connectionAttempts < this.maxConnectionAttempts) {
+                    this.connectionAttempts++;
+                    setTimeout(() => this.init(), 2000);
+                } else {
+                    console.error('❌ Supabase failed to load after multiple attempts');
+                    this.fallbackToOfflineMode();
+                }
+                return;
             }
+
+            // Initialize Supabase client
+            this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
+            console.log('✅ Supabase client initialized');
+            
+            // Test connection
+            const { data, error } = await this.supabase.from('tournaments').select('count').limit(1);
+            if (error) {
+                console.error('❌ Database connection failed:', error);
+                this.fallbackToOfflineMode();
+                return;
+            }
+            
+            console.log('✅ Database connection successful');
+            
+            await this.setupTournament();
+            this.setupRealtimeSubscriptions();
+            this.setupOfflineHandling();
+            this.isInitialized = true;
+            
+            console.log('🚀 Sync Manager fully initialized');
+            this.updateStatus('initialized');
+            
         } catch (error) {
             console.error('❌ Error initializing Sync Manager:', error);
+            this.fallbackToOfflineMode();
         }
+    }
+
+    fallbackToOfflineMode() {
+        console.log('📱 Running in offline-only mode');
+        this.isInitialized = true;
+        this.updateStatus('offline-only');
     }
 
     async setupTournament() {
@@ -40,7 +71,8 @@ class SyncManager {
             let tournamentId = localStorage.getItem('bakken-tournament-id');
             
             if (!tournamentId) {
-                // Create new tournament
+                console.log('🏆 Creating new tournament...');
+                
                 const { data, error } = await this.supabase
                     .from('tournaments')
                     .insert([{
@@ -52,28 +84,33 @@ class SyncManager {
                     .single();
 
                 if (error) {
-                    console.error('Error creating tournament:', error);
-                    return;
+                    console.error('❌ Error creating tournament:', error);
+                    throw error;
                 }
 
                 tournamentId = data.id;
                 localStorage.setItem('bakken-tournament-id', tournamentId);
-                console.log('🏆 Created new tournament:', tournamentId);
+                console.log('✅ Created new tournament:', tournamentId);
             } else {
-                console.log('🏆 Using existing tournament:', tournamentId);
+                console.log('✅ Using existing tournament:', tournamentId);
             }
 
             this.tournamentId = tournamentId;
         } catch (error) {
             console.error('❌ Error setting up tournament:', error);
+            throw error;
         }
     }
 
     setupRealtimeSubscriptions() {
-        if (!this.supabase || !this.tournamentId) return;
+        if (!this.supabase || !this.tournamentId) {
+            console.log('⚠️ Skipping real-time setup - missing requirements');
+            return;
+        }
 
         try {
-            // Subscribe to real-time changes
+            console.log('🔄 Setting up real-time subscriptions...');
+            
             this.supabase
                 .channel(`tournament-${this.tournamentId}`)
                 .on('postgres_changes', 
@@ -89,10 +126,12 @@ class SyncManager {
                     (payload) => this.handleRealtimeUpdate('games', payload)
                 )
                 .subscribe((status) => {
-                    console.log('🔄 Real-time subscription status:', status);
+                    console.log('📡 Real-time subscription status:', status);
+                    if (status === 'SUBSCRIBED') {
+                        console.log('✅ Real-time subscriptions active');
+                    }
                 });
 
-            console.log('✅ Real-time subscriptions active');
         } catch (error) {
             console.error('❌ Error setting up real-time subscriptions:', error);
         }
@@ -100,22 +139,31 @@ class SyncManager {
 
     setupOfflineHandling() {
         window.addEventListener('online', () => {
+            console.log('🌐 Back online');
             this.isOnline = true;
             this.syncPendingChanges();
             this.showMessage('🌐 Back online - syncing data...', '#4ECDC4');
+            this.updateStatus('online');
         });
 
         window.addEventListener('offline', () => {
+            console.log('📱 Gone offline');
             this.isOnline = false;
             this.showMessage('📱 Offline mode - changes will sync when reconnected', '#FF9A42');
+            this.updateStatus('offline');
         });
+    }
+
+    updateStatus(status) {
+        window.dispatchEvent(new CustomEvent('sync-status-changed', { 
+            detail: { status, manager: this } 
+        }));
     }
 
     handleRealtimeUpdate(table, payload) {
         console.log(`🔄 Real-time update for ${table}:`, payload);
         
         try {
-            // Update local storage with remote changes
             switch (table) {
                 case 'players':
                     this.updateLocalPlayers(payload);
@@ -128,14 +176,13 @@ class SyncManager {
                     break;
             }
 
-            // Trigger UI update
             this.triggerUIUpdate(table);
         } catch (error) {
             console.error(`❌ Error handling real-time update for ${table}:`, error);
         }
     }
 
-    // Sync methods for each data type
+    // Sync methods with better error handling
     async syncPlayers(players) {
         if (!this.isOnline || !this.supabase || !this.tournamentId) {
             this.queueForSync('players', players);
@@ -143,6 +190,8 @@ class SyncManager {
         }
 
         try {
+            console.log('🔄 Syncing players to cloud...');
+            
             // Clear existing players for this tournament
             await this.supabase
                 .from('players')
@@ -170,6 +219,7 @@ class SyncManager {
         } catch (error) {
             console.error('❌ Error syncing players:', error);
             this.queueForSync('players', players);
+            this.showMessage('⚠️ Sync failed - will retry when possible', '#FF9A42');
         }
     }
 
@@ -180,13 +230,13 @@ class SyncManager {
         }
 
         try {
-            // Clear existing teams
+            console.log('🔄 Syncing teams to cloud...');
+            
             await this.supabase
                 .from('teams')
                 .delete()
                 .eq('tournament_id', this.tournamentId);
 
-            // Insert new team data
             const { error } = await this.supabase
                 .from('teams')
                 .insert([{
@@ -212,13 +262,13 @@ class SyncManager {
         }
 
         try {
-            // Clear existing games
+            console.log('🔄 Syncing games to cloud...');
+            
             await this.supabase
                 .from('games')
                 .delete()
                 .eq('tournament_id', this.tournamentId);
 
-            // Insert new games data
             const { error } = await this.supabase
                 .from('games')
                 .insert([{
@@ -245,7 +295,6 @@ class SyncManager {
         try {
             console.log('📥 Loading data from cloud...');
             
-            // Load all data for this tournament
             const [playersResult, teamsResult, gamesResult] = await Promise.all([
                 this.supabase.from('players').select('*').eq('tournament_id', this.tournamentId),
                 this.supabase.from('teams').select('*').eq('tournament_id', this.tournamentId).order('updated_at', { ascending: false }).limit(1),
@@ -267,12 +316,10 @@ class SyncManager {
     }
 
     queueForSync(type, data) {
-        // Remove any existing queued item of the same type
         this.syncQueue = this.syncQueue.filter(item => item.type !== type);
-        
-        // Add new item to queue
         this.syncQueue.push({ type, data, timestamp: Date.now() });
         console.log(`📝 Queued ${type} for sync when online`);
+        this.updateStatus('pending-sync');
     }
 
     async syncPendingChanges() {
@@ -298,24 +345,23 @@ class SyncManager {
                 }
             } catch (error) {
                 console.error(`❌ Error syncing ${item.type}:`, error);
-                // Re-queue failed items
                 this.queueForSync(item.type, item.data);
             }
         }
 
         if (this.syncQueue.length === 0) {
             this.showMessage('✅ All changes synced to cloud', '#4ECDC4');
+            this.updateStatus('synced');
         }
     }
 
-    // Update local storage methods
+    // Helper methods
     updateLocalPlayers(payload) {
         try {
             let players = JSON.parse(localStorage.getItem('bakken-players') || '[]');
             
             switch (payload.eventType) {
                 case 'INSERT':
-                    // Only add if not already exists
                     if (!players.find(p => p.id === payload.new.id)) {
                         players.push({
                             id: payload.new.id,
@@ -367,7 +413,6 @@ class SyncManager {
     }
 
     triggerUIUpdate(table) {
-        // Dispatch custom events to trigger UI updates
         window.dispatchEvent(new CustomEvent('bakken-data-updated', { 
             detail: { table, source: 'remote' } 
         }));
@@ -401,18 +446,15 @@ class SyncManager {
         this.showMessage(`☁️ ${message}`, '#4ECDC4');
     }
 
-    // Public methods for the app to use
     async initialize() {
-        if (!this.isInitialized) {
-            // Wait for initialization
-            let attempts = 0;
-            while (!this.isInitialized && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
+        // Wait for initialization
+        let attempts = 0;
+        while (!this.isInitialized && attempts < 100) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
         }
 
-        if (this.isOnline && this.isInitialized) {
+        if (this.isOnline && this.isInitialized && this.supabase) {
             const cloudData = await this.loadFromCloud();
             if (cloudData) {
                 this.mergeCloudData(cloudData);
@@ -424,7 +466,6 @@ class SyncManager {
         try {
             let dataUpdated = false;
 
-            // Players
             if (cloudData.players.length > 0) {
                 const localPlayers = JSON.parse(localStorage.getItem('bakken-players') || '[]');
                 if (localPlayers.length === 0 || this.shouldUseCloudData('players')) {
@@ -435,7 +476,6 @@ class SyncManager {
                 }
             }
 
-            // Teams
             if (cloudData.teams) {
                 const localTeams = localStorage.getItem('bakken-teams');
                 if (!localTeams || this.shouldUseCloudData('teams')) {
@@ -445,7 +485,6 @@ class SyncManager {
                 }
             }
 
-            // Games
             if (cloudData.games) {
                 const localGames = localStorage.getItem('bakken-games');
                 if (!localGames || this.shouldUseCloudData('games')) {
@@ -456,7 +495,6 @@ class SyncManager {
             }
 
             if (dataUpdated) {
-                // Trigger UI refresh
                 window.dispatchEvent(new CustomEvent('bakken-data-loaded'));
                 this.showMessage('📥 Data loaded from cloud', '#45B7D1');
             }
@@ -467,16 +505,16 @@ class SyncManager {
 
     shouldUseCloudData(type) {
         const lastLocalUpdate = localStorage.getItem(`bakken-${type}-last-update`);
-        return !lastLocalUpdate || Date.now() - parseInt(lastLocalUpdate) > 30000; // 30 seconds
+        return !lastLocalUpdate || Date.now() - parseInt(lastLocalUpdate) > 30000;
     }
 
-    // Get connection status
     getStatus() {
         return {
             online: this.isOnline,
             initialized: this.isInitialized,
             tournamentId: this.tournamentId,
-            pendingSync: this.syncQueue.length
+            pendingSync: this.syncQueue.length,
+            hasSupabase: !!this.supabase
         };
     }
 }
