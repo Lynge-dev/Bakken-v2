@@ -7,7 +7,8 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
+    background: linear-gradient(135deg, #FFB366 0%, #2C2C2C 100%);
+    background-color: #FFB366;
     min-height: 100vh;
     color: #333;
     position: relative;
@@ -110,9 +111,9 @@ body::before {
 }
 
 .mode-tab.active {
-    background: #4ECDC4;
+    background: #FFB366;
     color: white;
-    box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 179, 102, 0.3);
 }
 
 .mode-tab:hover:not(.active) {
@@ -181,8 +182,8 @@ body::before {
 }
 
 .photo-placeholder:hover {
-    border-color: #4ECDC4;
-    background: rgba(78, 205, 196, 0.05);
+    border-color: #FFB366;
+    background: rgba(255, 179, 102, 0.05);
 }
 
 .placeholder-icon {
@@ -237,32 +238,32 @@ body::before {
 }
 
 .photo-btn.camera {
-    background: #4ECDC4;
-    color: white;
-}
-
-.photo-btn.camera:hover {
-    background: #45B7D1;
-    transform: translateY(-2px);
-}
-
-.photo-btn.upload {
-    background: #45B7D1;
-    color: white;
-}
-
-.photo-btn.upload:hover {
-    background: #42A5F5;
-    transform: translateY(-2px);
-}
-
-.photo-btn.delete {
     background: #FFB366;
     color: white;
 }
 
-.photo-btn.delete:hover {
+.photo-btn.camera:hover {
     background: #FF9A42;
+    transform: translateY(-2px);
+}
+
+.photo-btn.upload {
+    background: #666;
+    color: white;
+}
+
+.photo-btn.upload:hover {
+    background: #555;
+    transform: translateY(-2px);
+}
+
+.photo-btn.delete {
+    background: #2C2C2C;
+    color: white;
+}
+
+.photo-btn.delete:hover {
+    background: #1a1a1a;
     transform: translateY(-2px);
 }
 
@@ -316,8 +317,8 @@ body::before {
 }
 
 .team-photo-placeholder:hover {
-    border-color: #4ECDC4;
-    background: rgba(78, 205, 196, 0.05);
+    border-color: #FFB366;
+    background: rgba(255, 179, 102, 0.05);
 }
 
 .team-photo-info h3 {
@@ -336,8 +337,8 @@ body::before {
 }
 
 .team-1-color { background: #FFB366; }
-.team-2-color { background: #4ECDC4; }
-.team-3-color { background: #45B7D1; }
+.team-2-color { background: #666; }
+.team-3-color { background: #2C2C2C; }
 
 .team-members {
     color: #666;
@@ -365,17 +366,17 @@ body::before {
 }
 
 .team-photo-btn.camera {
-    background: #4ECDC4;
+    background: #FFB366;
     color: white;
 }
 
 .team-photo-btn.upload {
-    background: #45B7D1;
+    background: #666;
     color: white;
 }
 
 .team-photo-btn.delete {
-    background: #FFB366;
+    background: #2C2C2C;
     color: white;
 }
 
@@ -421,12 +422,12 @@ body::before {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #45B7D1;
+    background: #666;
     color: white;
 }
 
 .export-btn.primary {
-    background: #4ECDC4;
+    background: #FFB366;
     font-size: 1rem;
     padding: 15px;
 }
@@ -536,6 +537,11 @@ body::before {
 
 /* Mobile Optimizations */
 @media (max-width: 480px) {
+    body {
+        background: linear-gradient(135deg, #FFB366 0%, #2C2C2C 100%);
+        background-attachment: scroll;
+    }
+    
     .container {
         padding: 15px;
         gap: 15px;
@@ -615,7 +621,7 @@ body::before {
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid #4ECDC4;
+    border: 2px solid #FFB366;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;

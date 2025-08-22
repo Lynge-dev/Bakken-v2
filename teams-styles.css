@@ -7,7 +7,8 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #FFB366 0%, #4ECDC4 50%, #45B7D1 100%);
+    background: linear-gradient(135deg, #FFB366 0%, #2C2C2C 100%);
+    background-color: #FFB366;
     min-height: 100vh;
     color: #333;
     overflow-x: hidden;
@@ -129,7 +130,7 @@ body::before {
 
 .team-name-input input:focus {
     outline: none;
-    border-color: #4ECDC4;
+    border-color: #FFB366;
 }
 
 /* Controls Section */
@@ -157,12 +158,12 @@ body::before {
 }
 
 .control-btn.primary {
-    background: #4ECDC4;
+    background: #FFB366;
     color: white;
 }
 
 .control-btn.primary:hover {
-    background: #45B7D1;
+    background: #FF9A42;
     transform: translateY(-2px);
 }
 
@@ -222,8 +223,8 @@ body::before {
 }
 
 .players-pool.drag-over {
-    border-color: #4ECDC4;
-    background: rgba(78, 205, 196, 0.1);
+    border-color: #FFB366;
+    background: rgba(255, 179, 102, 0.1);
 }
 
 /* Teams Section */
@@ -265,8 +266,8 @@ body::before {
 }
 
 .team-1-color { background: #FFB366; }
-.team-2-color { background: #4ECDC4; }
-.team-3-color { background: #45B7D1; }
+.team-2-color { background: #666; }
+.team-3-color { background: #2C2C2C; }
 
 .team-name {
     font-size: 1rem;
@@ -310,8 +311,8 @@ body::before {
 }
 
 .team-players.drag-over {
-    border-color: #4ECDC4;
-    background: rgba(78, 205, 196, 0.1);
+    border-color: #FFB366;
+    background: rgba(255, 179, 102, 0.1);
 }
 
 /* Player Chips */
@@ -331,7 +332,7 @@ body::before {
 }
 
 .player-chip:hover {
-    border-color: #4ECDC4;
+    border-color: #FFB366;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
@@ -348,13 +349,13 @@ body::before {
 }
 
 .player-chip.in-team-2 {
-    border-color: #4ECDC4;
-    background: rgba(78, 205, 196, 0.1);
+    border-color: #666;
+    background: rgba(102, 102, 102, 0.1);
 }
 
 .player-chip.in-team-3 {
-    border-color: #45B7D1;
-    background: rgba(69, 183, 209, 0.1);
+    border-color: #2C2C2C;
+    background: rgba(44, 44, 44, 0.1);
 }
 
 .player-chip.just-added {
@@ -364,7 +365,7 @@ body::before {
 /* Drag Ghost */
 .drag-ghost {
     position: fixed;
-    background: #4ECDC4;
+    background: #FFB366;
     color: white;
     padding: 6px 12px;
     border-radius: 20px;
@@ -393,7 +394,7 @@ body::before {
 .continue-btn {
     width: 100%;
     padding: 15px;
-    background: #4ECDC4;
+    background: #FFB366;
     color: white;
     border: none;
     border-radius: 10px;
@@ -405,9 +406,9 @@ body::before {
 }
 
 .continue-btn:hover:not(:disabled) {
-    background: #45B7D1;
+    background: #FF9A42;
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 179, 102, 0.4);
 }
 
 .continue-btn:disabled {
@@ -437,6 +438,11 @@ body::before {
 
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
+    body {
+        background: linear-gradient(135deg, #FFB366 0%, #2C2C2C 100%);
+        background-attachment: scroll;
+    }
+    
     .container {
         padding: 15px;
         gap: 12px;
