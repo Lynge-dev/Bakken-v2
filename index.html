@@ -164,7 +164,7 @@
             });
 
             // Update sync status periodically
-            setInterval(updateSyncStatus, 5000);
+            setInterval(updateSyncStatus, 3000);
         }
 
         function addPlayer() {
@@ -271,10 +271,14 @@
                     statusIndicator.textContent = '⏳';
                     statusText.textContent = `Syncing ${status.pendingSync}...`;
                     syncStatus.style.background = 'rgba(69, 183, 209, 0.3)';
-                } else {
+                } else if (status.hasSupabase && status.online) {
                     statusIndicator.textContent = '☁️';
                     statusText.textContent = 'Synced';
                     syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
+                } else {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Local only';
+                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
                 }
             } else {
                 statusIndicator.textContent = '📱';
@@ -323,25 +327,28 @@
             return div.innerHTML;
         }
 
-        // Add animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideDown {
-                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                to { opacity: 1; transform: translateX(-50%) translateY(0); }
-            }
-            
-            @keyframes slideUp {
-                from { opacity: 1; transform: translateX(-50%) translateY(0); }
-                to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            }
-            
-            @keyframes slideInRight {
-                from { opacity: 0; transform: translateX(100px); }
-                to { opacity: 1; transform: translateX(0); }
-            }
-        `;
-        document.head.appendChild(style);
+        // Add animations (fixed to prevent conflicts)
+        if (!document.getElementById('bakken-animations')) {
+            const animationStyle = document.createElement('style');
+            animationStyle.id = 'bakken-animations';
+            animationStyle.textContent = `
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                }
+                
+                @keyframes slideUp {
+                    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                }
+                
+                @keyframes slideInRight {
+                    from { opacity: 0; transform: translateX(100px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+            `;
+            document.head.appendChild(animationStyle);
+        }
 
         // Debug function for testing
         window.debugSync = function() {
@@ -376,6 +383,19 @@
                 }
             }
         });
+
+        // Test real-time sync function
+        window.testSync = function() {
+            console.log('🧪 Testing sync...');
+            const testPlayer = {
+                id: 'test-' + Date.now(),
+                name: 'Test Player ' + Math.floor(Math.random() * 100)
+            };
+            players.push(testPlayer);
+            savePlayers();
+            updateUI();
+            console.log('✅ Test player added:', testPlayer);
+        };
     </script>
 </body>
 </html>
