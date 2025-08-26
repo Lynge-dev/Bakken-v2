@@ -1,4 +1,4 @@
-// Supabase Sync Manager - Fixed for Bakken-v2
+// Supabase Sync Manager - Enhanced for Multi-Device Sync
 class SyncManager {
     constructor() {
         this.supabaseUrl = 'https://vpcfvjztjfggzsabidzr.supabase.co';
@@ -480,6 +480,118 @@ class SyncManager {
         }
     }
 
+    // ENHANCED MULTI-DEVICE SYNC FUNCTIONS
+    async forceSyncFromMaster(masterDeviceData) {
+        try {
+            console.log('🔄 Force syncing from master device...');
+            
+            // Set same tournament ID
+            if (masterDeviceData.tournamentId) {
+                localStorage.setItem('bakken-tournament-id', masterDeviceData.tournamentId);
+                this.tournamentId = masterDeviceData.tournamentId;
+            }
+            
+            // Sync players
+            if (masterDeviceData.players) {
+                localStorage.setItem('bakken-players', JSON.stringify(masterDeviceData.players));
+                await this.syncPlayers(masterDeviceData.players);
+            }
+            
+            // Sync teams
+            if (masterDeviceData.teams) {
+                localStorage.setItem('bakken-teams', JSON.stringify(masterDeviceData.teams));
+                await this.syncTeams(masterDeviceData.teams);
+            }
+            
+            // Sync games
+            if (masterDeviceData.games) {
+                localStorage.setItem('bakken-games', JSON.stringify(masterDeviceData.games));
+                await this.syncGames(masterDeviceData.games);
+            }
+            
+            console.log('✅ Force sync completed');
+            this.showMessage('🔄 Data synced from master device', '#4ECDC4');
+            
+            // Reload page to show new data
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+            
+        } catch (error) {
+            console.error('❌ Force sync failed:', error);
+            this.showMessage('❌ Sync failed', '#FF6B6B');
+        }
+    }
+
+    async resetAndSync() {
+        try {
+            console.log('🔄 Resetting device and syncing...');
+            
+            // Clear local data
+            localStorage.removeItem('bakken-tournament-id');
+            localStorage.removeItem('bakken-players');
+            localStorage.removeItem('bakken-teams');
+            localStorage.removeItem('bakken-games');
+            
+            this.showMessage('🔄 Clearing local data...', '#FF9A42');
+            
+            // Reinitialize
+            await this.init();
+            
+            // Load fresh data from cloud
+            const cloudData = await this.loadFromCloud();
+            if (cloudData) {
+                if (cloudData.players && cloudData.players.length > 0) {
+                    localStorage.setItem('bakken-players', JSON.stringify(cloudData.players));
+                    console.log('✅ Restored players from cloud:', cloudData.players.length);
+                }
+                if (cloudData.teams && cloudData.teams.teams_data) {
+                    const teamsData = {
+                        teams: cloudData.teams.teams_data,
+                        teamNames: cloudData.teams.team_names || []
+                    };
+                    localStorage.setItem('bakken-teams', JSON.stringify(teamsData));
+                    console.log('✅ Restored teams from cloud');
+                }
+                if (cloudData.games && cloudData.games.games_data) {
+                    const gamesData = {
+                        games: cloudData.games.games_data
+                    };
+                    localStorage.setItem('bakken-games', JSON.stringify(gamesData));
+                    console.log('✅ Restored games from cloud');
+                }
+            }
+            
+            this.showMessage('✅ Device reset and synced', '#4ECDC4');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+            
+        } catch (error) {
+            console.error('❌ Reset and sync failed:', error);
+            this.showMessage('❌ Reset failed', '#FF6B6B');
+        }
+    }
+
+    async getDeviceInfo() {
+        const tournamentId = localStorage.getItem('bakken-tournament-id');
+        const players = JSON.parse(localStorage.getItem('bakken-players') || '[]');
+        const teams = JSON.parse(localStorage.getItem('bakken-teams') || '{}');
+        const games = JSON.parse(localStorage.getItem('bakken-games') || '{}');
+        
+        return {
+            tournamentId,
+            players,
+            teams,
+            games,
+            deviceType: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop',
+            isOnline: this.isOnline,
+            isInitialized: this.isInitialized,
+            hasSupabase: !!this.supabase
+        };
+    }
+
     getStatus() {
         return {
             online: this.isOnline,
@@ -505,7 +617,7 @@ document.head.appendChild(style);
 console.log('🚀 Creating SyncManager instance...');
 window.syncManager = new SyncManager();
 
-// Debug function
+// Enhanced debug functions
 window.testSync = function() {
     console.log('🧪 Testing sync connection...');
     if (window.syncManager) {
@@ -516,5 +628,26 @@ window.testSync = function() {
         console.log('Is Initialized:', window.syncManager.isInitialized);
     } else {
         console.log('❌ SyncManager not found');
+    }
+};
+
+window.getDeviceInfo = async function() {
+    if (window.syncManager) {
+        const info = await window.syncManager.getDeviceInfo();
+        console.log('📱 Device Info:', info);
+        return info;
+    }
+    return null;
+};
+
+window.resetDevice = function() {
+    if (window.syncManager) {
+        window.syncManager.resetAndSync();
+    }
+};
+
+window.forceSync = function() {
+    if (window.syncManager) {
+        window.syncManager.syncPendingChanges();
     }
 };
