@@ -328,14 +328,17 @@
             return div.innerHTML;
         }
 
-        // Add simple animations
-        const style = document.createElement('style');
-        style.textContent = 
-            '@keyframes slideDown {' +
-                'from { opacity: 0; transform: translateX(-50%) translateY(-20px); }' +
-                'to { opacity: 1; transform: translateX(-50%) translateY(0); }' +
-            '}';
-        document.head.appendChild(style);
+        // Add simple animations (fixed to prevent conflicts)
+        if (!document.getElementById('index-animations')) {
+            const indexStyle = document.createElement('style');
+            indexStyle.id = 'index-animations';
+            indexStyle.textContent = 
+                '@keyframes slideDown {' +
+                    'from { opacity: 0; transform: translateX(-50%) translateY(-20px); }' +
+                    'to { opacity: 1; transform: translateX(-50%) translateY(0); }' +
+                '}';
+            document.head.appendChild(indexStyle);
+        }
 
         // Debug function
         window.debugPlayers = function() {
