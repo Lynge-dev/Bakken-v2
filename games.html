@@ -44,75 +44,11 @@
                            placeholder="Indtast spil navn (f.eks. 'Fodbold', 'Løb', 'Quiz')" 
                            maxlength="50">
                     <button id="addGameBtn" class="add-game-btn" disabled>
-                        ➕ Tilføj Spil
+                        ➕ Tilføj & Indtast Resultat
                     </button>
                 </div>
                 <div class="add-game-hint">
-                    <small>Tilføj spil først, derefter kan du starte dem når I er klar</small>
-                </div>
-            </div>
-        </section>
-
-        <!-- Games List -->
-        <section class="games-list-section">
-            <h2 class="section-title">🎮 Ventende Spil</h2>
-            <div class="games-list" id="gamesList">
-                <div class="no-games">
-                    <div class="no-games-icon">🎮</div>
-                    <h3>Ingen spil tilføjet endnu</h3>
-                    <p>Tilføj dit første spil ovenfor</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Active Game Section (Hidden by default) -->
-        <section class="active-game-section" id="activeGameSection" style="display: none;">
-            <div class="active-game-card">
-                <h2 class="section-title" id="activeGameTitle">🎯 Indtast Resultater</h2>
-                <div class="game-info" id="activeGameInfo">
-                    <h3 id="currentGameName">Spil Navn</h3>
-                    <p class="scoring-info">🏆 Point System: 1. plads = 2 point, 2. plads = 1 point, 3. plads = 0 point</p>
-                </div>
-                
-                <div class="winner-selection">
-                    <div class="winner-card">
-                        <div class="place-header">
-                            <span class="place-medal">🥇</span>
-                            <h4>1. Plads (2 point)</h4>
-                        </div>
-                        <div class="team-buttons" id="firstPlaceButtons">
-                            <!-- Team buttons will be generated here -->
-                        </div>
-                    </div>
-
-                    <div class="winner-card">
-                        <div class="place-header">
-                            <span class="place-medal">🥈</span>
-                            <h4>2. Plads (1 point)</h4>
-                        </div>
-                        <div class="team-buttons" id="secondPlaceButtons">
-                            <!-- Team buttons will be generated here -->
-                        </div>
-                    </div>
-
-                    <div class="winner-card">
-                        <div class="place-header">
-                            <span class="place-medal">🥉</span>
-                            <h4>3. Plads (0 point)</h4>
-                        </div>
-                        <div class="team-buttons" id="thirdPlaceButtons">
-                            <!-- Team buttons will be generated here -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="game-actions">
-                    <button id="saveResultBtn" class="action-btn primary" disabled>
-                        💾 Gem Resultat
-                    </button>
-                    <button id="cancelResultBtn" class="action-btn secondary">
-                        ❌ Annuller
-                    </button>
+                    <small>Indtast spil navn og resultat popup åbner automatisk</small>
                 </div>
             </div>
         </section>
@@ -142,8 +78,67 @@
         </section>
     </div>
 
+    <!-- Results Modal/Popup -->
+    <div class="results-modal" id="resultsModal">
+        <div class="modal-backdrop" onclick="closeResultsModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalGameTitle">🎯 Indtast Resultater</h2>
+                <button class="close-btn" onclick="closeResultsModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="game-info">
+                    <h3 id="modalGameName">Spil Navn</h3>
+                    <p class="scoring-info">🏆 Point System: 1. plads = 2 point, 2. plads = 1 point, 3. plads = 0 point</p>
+                </div>
+                
+                <div class="winner-selection">
+                    <div class="winner-card">
+                        <div class="place-header">
+                            <span class="place-medal">🥇</span>
+                            <h4>1. Plads (2 point)</h4>
+                        </div>
+                        <div class="team-buttons" id="firstPlaceButtons">
+                            <!-- Team buttons will be generated here -->
+                        </div>
+                    </div>
+
+                    <div class="winner-card">
+                        <div class="place-header">
+                            <span class="place-medal">🥈</span>
+                            <h4>2. Plads (1 point)</h4>
+                        </div>
+                        <div class="team-buttons" id="secondPlaceButtons">
+                            <!-- Team buttons will be generated here -->
+                        </div>
+                    </div>
+
+                    <div class="winner-card" id="thirdPlaceCard">
+                        <div class="place-header">
+                            <span class="place-medal">🥉</span>
+                            <h4>3. Plads (0 point)</h4>
+                        </div>
+                        <div class="team-buttons" id="thirdPlaceButtons">
+                            <!-- Team buttons will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="saveResultBtn" class="modal-btn primary" disabled>
+                    💾 Gem Resultat
+                </button>
+                <button id="cancelResultBtn" class="modal-btn secondary" onclick="closeResultsModal()">
+                    ❌ Annuller
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Games management - FIXED: No auto-start when adding games
+        // Games management with instant popup for results
         let teams = [];
         let games = [];
         let currentGame = null;
@@ -156,14 +151,14 @@
         // DOM elements
         const gameNameInput = document.getElementById('gameNameInput');
         const addGameBtn = document.getElementById('addGameBtn');
-        const gamesList = document.getElementById('gamesList');
         const standingsGrid = document.getElementById('standingsGrid');
-        const activeGameSection = document.getElementById('activeGameSection');
-        const activeGameTitle = document.getElementById('activeGameTitle');
-        const currentGameName = document.getElementById('currentGameName');
+        const resultsModal = document.getElementById('resultsModal');
+        const modalGameTitle = document.getElementById('modalGameTitle');
+        const modalGameName = document.getElementById('modalGameName');
         const firstPlaceButtons = document.getElementById('firstPlaceButtons');
         const secondPlaceButtons = document.getElementById('secondPlaceButtons');
         const thirdPlaceButtons = document.getElementById('thirdPlaceButtons');
+        const thirdPlaceCard = document.getElementById('thirdPlaceCard');
         const saveResultBtn = document.getElementById('saveResultBtn');
         const cancelResultBtn = document.getElementById('cancelResultBtn');
         const completedGames = document.getElementById('completedGames');
@@ -242,11 +237,11 @@
         }
 
         function setupEventListeners() {
-            // Add game functionality
-            addGameBtn.addEventListener('click', addGame);
+            // Add game functionality - opens popup immediately
+            addGameBtn.addEventListener('click', addGameAndOpenPopup);
             gameNameInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    addGame();
+                    addGameAndOpenPopup();
                 }
             });
             gameNameInput.addEventListener('input', function() {
@@ -255,21 +250,39 @@
 
             // Result entry functionality
             saveResultBtn.addEventListener('click', saveGameResult);
-            cancelResultBtn.addEventListener('click', cancelResultEntry);
 
             // Finish tournament
             finishTournamentBtn.addEventListener('click', finishTournament);
+
+            // Modal close events
+            resultsModal.addEventListener('click', function(e) {
+                if (e.target === resultsModal || e.target.classList.contains('modal-backdrop')) {
+                    closeResultsModal();
+                }
+            });
+
+            // Keyboard events
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeResultsModal();
+                }
+            });
 
             // Sync events
             window.addEventListener('sync-status-changed', updateSyncStatus);
             setInterval(updateSyncStatus, 3000);
         }
 
-        function addGame() {
+        function addGameAndOpenPopup() {
             const gameName = gameNameInput.value.trim();
             
             if (gameName === '') {
                 showMessage('⚠️ Indtast et spil navn', '#FF9A42');
+                return;
+            }
+            
+            if (teams.length < 2) {
+                showMessage('⚠️ Minimum 2 hold krævet for at spille', '#FF9A42');
                 return;
             }
             
@@ -278,87 +291,104 @@
                 return;
             }
             
+            // Create new game
             const newGame = {
                 id: generateGameId(),
                 name: gameName,
-                status: 'pending', // pending, active, completed
+                status: 'active', // Set to active immediately
                 results: null,
                 createdAt: Date.now()
             };
             
             games.push(newGame);
-            console.log('➕ Added game:', newGame);
+            currentGame = newGame;
+            console.log('➕ Added game and opening popup:', newGame);
             
-            // Clear input and update UI
+            // Clear input
             gameNameInput.value = '';
             addGameBtn.disabled = true;
             
-            // Save and update - NO AUTO-START
-            saveData();
-            updateUI();
-            showMessage(`✅ "${gameName}" tilføjet til spil listen!`, '#4ECDC4');
+            // Open popup immediately
+            openResultsPopup();
             
-            // Focus back to input for adding more games
-            gameNameInput.focus();
+            showMessage(`✅ "${gameName}" tilføjet - indtast resultater`, '#4ECDC4');
+            
+            // Focus back to input after modal closes
+            setTimeout(() => gameNameInput.focus(), 100);
         }
 
-        function startGame(gameId) {
-            const game = games.find(g => g.id === gameId);
-            if (!game) return;
-            
-            if (teams.length < 2) {
-                showMessage('⚠️ Minimum 2 hold krævet for at spille', '#FF9A42');
-                return;
-            }
-            
-            currentGame = game;
-            game.status = 'active';
+        function openResultsPopup() {
+            if (!currentGame) return;
             
             // Reset selections
             selectedResults = { first: null, second: null, third: null };
             
-            // Update UI
-            currentGameName.textContent = game.name;
+            // Update modal content
+            modalGameName.textContent = currentGame.name;
+            
+            // Generate team buttons
             generateTeamButtons();
-            activeGameSection.style.display = 'block';
             
-            // Scroll to active game
-            activeGameSection.scrollIntoView({ behavior: 'smooth' });
+            // Show/hide third place based on team count
+            if (teams.length === 2) {
+                thirdPlaceCard.style.display = 'none';
+            } else {
+                thirdPlaceCard.style.display = 'block';
+            }
             
-            showMessage(`🎯 Starter "${game.name}" - vælg placeringer`, '#45B7D1');
+            // Show modal
+            resultsModal.classList.add('active');
             
-            // Update games list to remove this game from pending
-            updateGamesList();
+            // Disable save button initially
+            saveResultBtn.disabled = true;
+        }
+
+        function closeResultsModal() {
+            resultsModal.classList.remove('active');
+            
+            if (currentGame) {
+                // If game wasn't completed, remove it
+                if (currentGame.status === 'active' && !currentGame.results) {
+                    games = games.filter(g => g.id !== currentGame.id);
+                    console.log('🗑️ Removed uncompleted game:', currentGame.name);
+                }
+            }
+            
+            currentGame = null;
+            selectedResults = { first: null, second: null, third: null };
+            saveResultBtn.disabled = true;
+            
+            // Update UI
+            updateUI();
         }
 
         function generateTeamButtons() {
-            const buttonHTML = teams.map(team => `
+            // First place buttons
+            firstPlaceButtons.innerHTML = teams.map(team => `
                 <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'first')">
                     ${escapeHtml(team.name)} (${team.players.length} spillere)
                 </button>
             `).join('');
             
-            firstPlaceButtons.innerHTML = buttonHTML;
-            
-            const buttonHTML2 = teams.map(team => `
+            // Second place buttons
+            secondPlaceButtons.innerHTML = teams.map(team => `
                 <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'second')">
                     ${escapeHtml(team.name)} (${team.players.length} spillere)
                 </button>
             `).join('');
             
-            secondPlaceButtons.innerHTML = buttonHTML2;
-            
-            const buttonHTML3 = teams.map(team => `
-                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'third')">
-                    ${escapeHtml(team.name)} (${team.players.length} spillere)
-                </button>
-            `).join('');
-            
-            thirdPlaceButtons.innerHTML = buttonHTML3;
+            // Third place buttons (only if more than 2 teams)
+            if (teams.length > 2) {
+                thirdPlaceButtons.innerHTML = teams.map(team => `
+                    <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'third')">
+                        ${escapeHtml(team.name)} (${team.players.length} spillere)
+                    </button>
+                `).join('');
+            }
         }
 
         function selectTeamForPlace(teamId, place) {
-            // Clear previous selection for this place
+            // Set selection
             selectedResults[place] = teamId;
             
             // Update button states
@@ -408,7 +438,6 @@
                     showMessage('⚠️ Vælg både 1. og 2. plads', '#FF9A42');
                     return;
                 }
-                // Auto-assign third place as null for 2 teams
                 selectedResults.third = null;
             } else {
                 if (!selectedResults.first || !selectedResults.second || !selectedResults.third) {
@@ -470,25 +499,17 @@
             console.log('💾 Saved game result:', currentGame);
             
             saveData();
-            cancelResultEntry();
-            updateUI();
             
-            showMessage(`✅ "${currentGame.name}" resultat gemt!`, '#4ECDC4');
-        }
-
-        function cancelResultEntry() {
-            if (currentGame) {
-                // Reset game status back to pending if we cancel
-                currentGame.status = 'pending';
-            }
-            
+            // Close modal
+            resultsModal.classList.remove('active');
             currentGame = null;
             selectedResults = { first: null, second: null, third: null };
-            activeGameSection.style.display = 'none';
-            saveResultBtn.disabled = true;
             
-            // Update UI to show the game back in pending list
             updateUI();
+            showMessage(`✅ Resultat gemt for "${currentGame ? currentGame.name : 'spillet'}"!`, '#4ECDC4');
+            
+            // Focus back to input
+            gameNameInput.focus();
         }
 
         function deleteGame(gameId) {
@@ -504,42 +525,9 @@
         }
 
         function updateUI() {
-            updateGamesList();
             updateStandings();
             updateCompletedGames();
             updateFinishButton();
-        }
-
-        function updateGamesList() {
-            const pendingGames = games.filter(g => g.status === 'pending');
-            
-            if (pendingGames.length === 0) {
-                gamesList.innerHTML = `
-                    <div class="no-games">
-                        <div class="no-games-icon">🎮</div>
-                        <h3>Ingen ventende spil</h3>
-                        <p>Tilføj et nyt spil ovenfor</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            gamesList.innerHTML = pendingGames.map(game => `
-                <div class="game-item">
-                    <div class="game-info">
-                        <div class="game-name">${escapeHtml(game.name)}</div>
-                        <div class="game-status">⏳ Venter på at blive spillet</div>
-                    </div>
-                    <div class="game-actions">
-                        <button class="game-btn primary" onclick="startGame('${game.id}')">
-                            🎯 Start Spil
-                        </button>
-                        <button class="game-btn secondary" onclick="deleteGame('${game.id}')">
-                            🗑️ Slet
-                        </button>
-                    </div>
-                </div>
-            `).join('');
         }
 
         function updateStandings() {
@@ -602,7 +590,7 @@
                         <div class="completed-game-result">
                             🥇 ${game.results[0].teamName} (2 pt) | 
                             🥈 ${game.results[1].teamName} (1 pt)
-                            ${game.results.length > 2 ? ` | 🥉 ${game.results[2].teamName} (0 pt)` : ''}
+                            ${game.results.length > 2 && game.results[2] ? ` | 🥉 ${game.results[2].teamName} (0 pt)` : ''}
                         </div>
                     </div>
                     <button class="delete-game-btn" onclick="deleteGame('${game.id}')" title="Slet spil">
@@ -626,11 +614,9 @@
             }
             
             if (confirm(`Afslut turneringen med ${completedGamesCount} spil?`)) {
-                // Calculate final standings
                 updateStandings();
                 showMessage('🏁 Turnering afsluttet! Se billeder for at gemme minder.', '#4ECDC4');
                 
-                // Navigate to photos page after a delay
                 setTimeout(() => {
                     window.location.href = 'photos.html';
                 }, 3000);
@@ -684,7 +670,7 @@
                 color: white;
                 padding: 12px 20px;
                 border-radius: 8px;
-                z-index: 1000;
+                z-index: 2000;
                 animation: slideDown 0.3s ease;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                 font-weight: 500;
@@ -712,7 +698,7 @@
             return div.innerHTML;
         }
 
-        // Add animations
+        // Add animations and modal styles
         if (!document.getElementById('games-animations')) {
             const animationStyle = document.createElement('style');
             animationStyle.id = 'games-animations';
@@ -725,6 +711,131 @@
                 @keyframes slideUp {
                     from { opacity: 1; transform: translateX(-50%) translateY(0); }
                     to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                }
+                
+                .results-modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                    padding: 20px;
+                }
+                
+                .results-modal.active {
+                    display: flex;
+                    animation: fadeIn 0.3s ease;
+                }
+                
+                .modal-backdrop {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                }
+                
+                .modal-content {
+                    background: white;
+                    border-radius: 15px;
+                    max-width: 500px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    position: relative;
+                    animation: slideInUp 0.3s ease;
+                }
+                
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    border-bottom: 1px solid #eee;
+                }
+                
+                .modal-header h2 {
+                    margin: 0;
+                    color: #333;
+                }
+                
+                .close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: #666;
+                    padding: 5px;
+                    border-radius: 50%;
+                    width: 35px;
+                    height: 35px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .close-btn:hover {
+                    background: #f0f0f0;
+                    color: #333;
+                }
+                
+                .modal-body {
+                    padding: 20px;
+                }
+                
+                .modal-footer {
+                    display: flex;
+                    gap: 10px;
+                    padding: 20px;
+                    border-top: 1px solid #eee;
+                    justify-content: flex-end;
+                }
+                
+                .modal-btn {
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .modal-btn.primary {
+                    background: #FFB366;
+                    color: white;
+                }
+                
+                .modal-btn.primary:hover:not(:disabled) {
+                    background: #FF9A42;
+                }
+                
+                .modal-btn.primary:disabled {
+                    background: #ccc;
+                    cursor: not-allowed;
+                }
+                
+                .modal-btn.secondary {
+                    background: #f0f0f0;
+                    color: #666;
+                }
+                
+                .modal-btn.secondary:hover {
+                    background: #e0e0e0;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                @keyframes slideInUp {
+                    from { opacity: 0; transform: translateY(50px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
             `;
             document.head.appendChild(animationStyle);
