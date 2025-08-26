@@ -60,8 +60,9 @@
     </div>
 
     <script>
-        // Simple and reliable player management
+        // Simple and reliable player management with fixed sync status
         let players = [];
+        let syncStatusUpdateInterval = null;
 
         // DOM elements
         const playerInput = document.getElementById('playerInput');
@@ -80,8 +81,50 @@
             loadPlayers();
             setupEventListeners();
             updateUI();
-            initSync();
+            
+            // Start checking sync status
+            checkSyncStatus();
+            syncStatusUpdateInterval = setInterval(checkSyncStatus, 2000);
         });
+
+        function checkSyncStatus() {
+            if (window.syncManager) {
+                const status = window.syncManager.getStatus();
+                console.log('📊 Sync status check:', status);
+                
+                if (status.initialized && status.hasSupabase && status.online) {
+                    // Connected and working
+                    statusIndicator.textContent = '☁️';
+                    statusText.textContent = 'Synced';
+                    syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
+                } else if (status.initialized && !status.hasSupabase) {
+                    // Local only mode
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Local only';
+                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+                } else if (status.initialized && !status.online) {
+                    // Offline
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Offline';
+                    syncStatus.style.background = 'rgba(255, 154, 66, 0.3)';
+                } else if (status.pendingSync > 0) {
+                    // Syncing
+                    statusIndicator.textContent = '⏳';
+                    statusText.textContent = 'Syncing...';
+                    syncStatus.style.background = 'rgba(69, 183, 209, 0.3)';
+                } else {
+                    // Still connecting
+                    statusIndicator.textContent = '🔄';
+                    statusText.textContent = 'Connecting...';
+                    syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
+                }
+            } else {
+                // No sync manager yet
+                statusIndicator.textContent = '🔄';
+                statusText.textContent = 'Loading...';
+                syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
+            }
+        }
 
         function loadPlayers() {
             try {
@@ -106,6 +149,7 @@
                 
                 // Sync to cloud if available
                 if (window.syncManager && window.syncManager.syncPlayers) {
+                    console.log('☁️ Syncing to cloud...');
                     window.syncManager.syncPlayers(players);
                 }
             } catch (e) {
@@ -135,10 +179,19 @@
                 }
             });
 
+            // Listen for sync events
+            window.addEventListener('sync-status-changed', function(event) {
+                console.log('📡 Sync status changed:', event.detail);
+                checkSyncStatus();
+            });
+
             // Auto-save on page unload
             window.addEventListener('beforeunload', function() {
                 if (players.length > 0) {
                     savePlayers();
+                }
+                if (syncStatusUpdateInterval) {
+                    clearInterval(syncStatusUpdateInterval);
                 }
             });
         }
@@ -162,6 +215,8 @@
             };
             
             players.push(newPlayer);
+            console.log('➕ Added player:', newPlayer);
+            
             playerInput.value = '';
             addPlayerBtn.disabled = true;
             
@@ -176,6 +231,8 @@
             const player = players.find(p => p.id === playerId);
             if (player && confirm('Fjern ' + player.name + '?')) {
                 players = players.filter(p => p.id !== playerId);
+                console.log('🗑️ Removed player:', player);
+                
                 savePlayers();
                 updateUI();
                 showMessage('🗑️ ' + player.name + ' fjernet', '#FF9A42');
@@ -187,6 +244,8 @@
             
             if (confirm('Fjern alle ' + players.length + ' spillere?')) {
                 players = [];
+                console.log('🗑️ All players cleared');
+                
                 savePlayers();
                 updateUI();
                 showMessage('🗑️ Alle spillere fjernet', '#FF9A42');
@@ -227,26 +286,6 @@
             } else {
                 continueBtn.classList.add('disabled');
                 continueBtn.style.pointerEvents = 'none';
-            }
-        }
-
-        function initSync() {
-            if (window.syncManager) {
-                window.syncManager.initialize().then(() => {
-                    console.log('✅ Sync initialized');
-                    statusIndicator.textContent = '☁️';
-                    statusText.textContent = 'Synced';
-                    syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
-                }).catch(() => {
-                    console.log('📱 Offline mode');
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Local only';
-                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
-                });
-            } else {
-                statusIndicator.textContent = '📱';
-                statusText.textContent = 'Local only';
-                syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
             }
         }
 
@@ -300,8 +339,18 @@
 
         // Debug function
         window.debugPlayers = function() {
+            console.log('🔍 Debug Info:');
             console.log('Players:', players);
             console.log('LocalStorage:', localStorage.getItem('bakken-players'));
+            console.log('Sync Manager:', window.syncManager ? 'Available' : 'Not Available');
+            if (window.syncManager) {
+                console.log('Sync Status:', window.syncManager.getStatus());
+            }
+        };
+
+        // Force sync status update
+        window.updateSyncStatus = function() {
+            checkSyncStatus();
         };
     </script>
 </body>
