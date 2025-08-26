@@ -16,7 +16,7 @@
             <p class="app-subtitle">Tilføj Spillere</p>
             <div class="sync-status" id="syncStatus">
                 <span class="status-indicator" id="statusIndicator">🔄</span>
-                <span class="status-text" id="statusText">Initializing...</span>
+                <span class="status-text" id="statusText">Connecting...</span>
             </div>
         </header>
 
@@ -27,11 +27,9 @@
                        id="playerInput" 
                        placeholder="Indtast spillernavn" 
                        maxlength="30"
-                       autocomplete="off"
-                       spellcheck="false">
+                       autocomplete="off">
                 <button id="addPlayerBtn" class="add-btn" disabled>
-                    <span class="btn-icon">➕</span>
-                    <span class="btn-text">Tilføj Spiller</span>
+                    Tilføj Spiller
                 </button>
             </div>
             <div class="input-hints">
@@ -41,156 +39,29 @@
 
         <!-- Players List -->
         <section class="players-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="title-icon">👥</span>
-                    Spillere 
-                    <span class="player-count" id="playerCount">0</span>
-                </h2>
-                <div class="section-actions">
-                    <button id="clearAllBtn" class="action-btn secondary" style="display: none;">
-                        <span class="btn-icon">🗑️</span>
-                        <span class="btn-text">Ryd Alle</span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="players-container">
-                <div class="players-list" id="playersList">
-                    <div class="empty-state">
-                        <div class="empty-icon">👥</div>
-                        <h3>Ingen spillere tilføjet endnu</h3>
-                        <p>Tilføj spillere for at starte turneringen</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Quick Actions -->
-        <section class="quick-actions-section" id="quickActionsSection" style="display: none;">
-            <h3 class="section-subtitle">Hurtige Handlinger</h3>
-            <div class="quick-actions">
-                <button id="addDemoPlayersBtn" class="quick-btn">
-                    <span class="btn-icon">⚡</span>
-                    <span class="btn-text">Tilføj Demo Spillere</span>
-                </button>
-                <button id="importPlayersBtn" class="quick-btn">
-                    <span class="btn-icon">📋</span>
-                    <span class="btn-text">Importer Fra Tekst</span>
-                </button>
+            <h2 class="section-title">
+                Spillere 
+                <span class="player-count" id="playerCount">0</span>
+            </h2>
+            <div class="players-list" id="playersList">
+                <div class="empty-message">Ingen spillere tilføjet endnu</div>
             </div>
         </section>
 
         <!-- Actions -->
         <section class="actions-section">
-            <div class="progress-indicator">
-                <div class="progress-step active" data-step="1">
-                    <div class="step-number">1</div>
-                    <div class="step-label">Spillere</div>
-                </div>
-                <div class="progress-line"></div>
-                <div class="progress-step" data-step="2">
-                    <div class="step-number">2</div>
-                    <div class="step-label">Hold</div>
-                </div>
-                <div class="progress-line"></div>
-                <div class="progress-step" data-step="3">
-                    <div class="step-number">3</div>
-                    <div class="step-label">Spil</div>
-                </div>
-            </div>
-            
-            <button id="continueBtn" class="continue-btn disabled">
-                <span class="btn-icon">🏈</span>
-                <span class="btn-text">Næste: Opret Hold</span>
-                <span class="btn-arrow">→</span>
+            <button id="clearAllBtn" class="action-btn secondary" style="display: none;">
+                🗑️ Ryd Alle
             </button>
-            
-            <div class="requirement-status" id="requirementStatus">
-                <div class="requirement-item" id="minPlayersReq">
-                    <span class="req-icon">⭕</span>
-                    <span class="req-text">Minimum 3 spillere</span>
-                    <span class="req-status">0/3</span>
-                </div>
-            </div>
+            <a href="simple-teams.html" id="continueBtn" class="action-btn primary disabled">
+                Næste: Opret Hold
+            </a>
         </section>
-
-        <!-- Statistics -->
-        <section class="stats-section" id="statsSection" style="display: none;">
-            <h3 class="section-subtitle">Statistik</h3>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalPlayers">0</div>
-                    <div class="stat-label">Spillere</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="estimatedTeams">0</div>
-                    <div class="stat-label">Forventede Hold</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="avgPlayersPerTeam">0</div>
-                    <div class="stat-label">Spillere/Hold</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Debug Section -->
-        <section class="debug-section" id="debugSection" style="display: none;">
-            <h3 class="section-subtitle">Debug Info</h3>
-            <div class="debug-info">
-                <div class="debug-item">
-                    <span class="debug-label">LocalStorage Status:</span>
-                    <span class="debug-value" id="debugLocalStorage">Checking...</span>
-                </div>
-                <div class="debug-item">
-                    <span class="debug-label">Players Array:</span>
-                    <span class="debug-value" id="debugPlayersArray">[]</span>
-                </div>
-                <div class="debug-item">
-                    <span class="debug-label">Last Save:</span>
-                    <span class="debug-value" id="debugLastSave">Never</span>
-                </div>
-            </div>
-            <div class="debug-actions">
-                <button class="debug-btn" onclick="testDataTransfer()">Test Data Transfer</button>
-                <button class="debug-btn" onclick="forceDataSave()">Force Save</button>
-                <button class="debug-btn" onclick="showDebugInfo()">Show Debug</button>
-            </div>
-        </section>
-    </div>
-
-    <!-- Import Modal -->
-    <div class="modal" id="importModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Importer Spillere</h3>
-                <button class="close-btn" onclick="closeImportModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Indtast spillernavne, et navn per linje:</p>
-                <textarea id="importTextarea" 
-                          placeholder="Spiller 1&#10;Spiller 2&#10;Spiller 3&#10;..."></textarea>
-                <div class="import-preview" id="importPreview" style="display: none;">
-                    <h4>Forhåndsvisning:</h4>
-                    <div class="preview-list" id="previewList"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn secondary" onclick="closeImportModal()">Annuller</button>
-                <button class="modal-btn primary" id="confirmImportBtn" onclick="confirmImport()" disabled>
-                    Importer Spillere
-                </button>
-            </div>
-        </div>
     </div>
 
     <script>
-        // GUARANTEED DATA TRANSFER SYSTEM
+        // Simple and reliable player management
         let players = [];
-        let syncInitialized = false;
-        let isOnline = navigator.onLine;
-        let saveAttempts = 0;
-        const MAX_SAVE_ATTEMPTS = 5;
 
         // DOM elements
         const playerInput = document.getElementById('playerInput');
@@ -202,379 +73,74 @@
         const syncStatus = document.getElementById('syncStatus');
         const statusIndicator = document.getElementById('statusIndicator');
         const statusText = document.getElementById('statusText');
-        const quickActionsSection = document.getElementById('quickActionsSection');
-        const addDemoPlayersBtn = document.getElementById('addDemoPlayersBtn');
-        const importPlayersBtn = document.getElementById('importPlayersBtn');
-        const statsSection = document.getElementById('statsSection');
-        const requirementStatus = document.getElementById('requirementStatus');
-        const minPlayersReq = document.getElementById('minPlayersReq');
-        const totalPlayers = document.getElementById('totalPlayers');
-        const estimatedTeams = document.getElementById('estimatedTeams');
-        const avgPlayersPerTeam = document.getElementById('avgPlayersPerTeam');
-        const importModal = document.getElementById('importModal');
-        const importTextarea = document.getElementById('importTextarea');
-        const importPreview = document.getElementById('importPreview');
-        const previewList = document.getElementById('previewList');
-        const confirmImportBtn = document.getElementById('confirmImportBtn');
-        const debugSection = document.getElementById('debugSection');
-        const debugLocalStorage = document.getElementById('debugLocalStorage');
-        const debugPlayersArray = document.getElementById('debugPlayersArray');
-        const debugLastSave = document.getElementById('debugLastSave');
 
-        // Initialize application
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Bakken Players App Starting...');
-            console.log('🔧 Debug mode enabled');
-            
-            // Show debug section if in development
-            if (window.location.hostname === 'localhost' || window.location.hostname.includes('github.io')) {
-                debugSection.style.display = 'block';
-            }
-            
-            // Load existing data first
+            console.log('🚀 Players page starting...');
             loadPlayers();
-            
-            // Setup event listeners
             setupEventListeners();
-            
-            // Update UI immediately
             updateUI();
-            updateDebugInfo();
-            updateSyncStatus();
-            
-            // Initialize sync manager
-            initializeSyncManager();
-            
-            // Show welcome message for new users
-            if (players.length === 0 && !localStorage.getItem('bakken-welcomed')) {
-                setTimeout(() => {
-                    showWelcomeMessage();
-                    localStorage.setItem('bakken-welcomed', 'true');
-                }, 1000);
-            }
-
-            // Periodic data verification
-            setInterval(verifyDataIntegrity, 5000);
+            initSync();
         });
-
-        async function initializeSyncManager() {
-            try {
-                statusText.textContent = 'Connecting to cloud...';
-                
-                if (window.syncManager) {
-                    await window.syncManager.initialize();
-                    console.log('✅ Sync manager initialized');
-                    
-                    // Load fresh data from cloud
-                    await loadCloudData();
-                    
-                    syncInitialized = true;
-                    updateSyncStatus();
-                    
-                    if (isOnline) {
-                        showMessage('☁️ Connected to cloud sync', '#4ECDC4');
-                    }
-                } else {
-                    console.warn('⚠️ Sync manager not available');
-                    syncInitialized = true;
-                    updateSyncStatus();
-                }
-            } catch (error) {
-                console.error('❌ Sync initialization failed:', error);
-                syncInitialized = true;
-                updateSyncStatus();
-                showMessage('📱 Running in offline mode', '#FF9A42');
-            }
-        }
-
-        async function loadCloudData() {
-            if (!window.syncManager || !window.syncManager.supabase) {
-                return;
-            }
-
-            try {
-                const cloudData = await window.syncManager.loadFromCloud();
-                
-                if (cloudData && cloudData.players && cloudData.players.length > 0) {
-                    const cloudPlayers = cloudData.players.map(p => ({ 
-                        id: p.id, 
-                        name: p.name
-                    }));
-                    
-                    // Merge with local data (cloud takes precedence)
-                    if (cloudPlayers.length !== players.length || 
-                        !cloudPlayers.every(cp => players.find(p => p.id === cp.id && p.name === cp.name))) {
-                        
-                        players = cloudPlayers;
-                        guaranteedSave();
-                        updateUI();
-                        updateDebugInfo();
-                        
-                        console.log('✅ Loaded players from cloud:', players.length);
-                        showMessage(`📥 Loaded ${players.length} players from cloud`, '#4ECDC4');
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error loading cloud data:', error);
-            }
-        }
 
         function loadPlayers() {
             try {
-                console.log('📥 Loading players from localStorage...');
-                
                 const data = localStorage.getItem('bakken-players');
-                console.log('📥 Raw localStorage data:', data);
-                
-                if (data && data !== 'null' && data !== 'undefined') {
-                    const parsedPlayers = JSON.parse(data);
-                    console.log('📥 Parsed players:', parsedPlayers);
-                    
-                    // Ensure all players have required fields and clean format
-                    players = parsedPlayers
-                        .filter(player => player && player.name) // Remove invalid entries
-                        .map(player => ({
-                            id: player.id || generatePlayerId(),
-                            name: String(player.name).trim()
-                        }));
-                    
-                    console.log('✅ Loaded and cleaned players:', players);
+                if (data) {
+                    players = JSON.parse(data);
+                    console.log('📥 Loaded players:', players.length);
                 } else {
                     players = [];
-                    console.log('📥 No valid players found in localStorage');
                 }
-                
-                updateDebugInfo();
             } catch (e) {
-                console.error('❌ Error loading players:', e);
+                console.error('❌ Load failed:', e);
                 players = [];
-                showMessage('⚠️ Error loading saved players', '#FF6B6B');
-                updateDebugInfo();
             }
         }
 
-        function guaranteedSave() {
-            return new Promise((resolve, reject) => {
-                let attempts = 0;
-                
-                function attemptSave() {
-                    attempts++;
-                    console.log(`💾 Save attempt ${attempts}/${MAX_SAVE_ATTEMPTS}`);
-                    
-                    try {
-                        // Clean and validate player data
-                        const cleanPlayers = players
-                            .filter(player => player && player.name && player.id)
-                            .map(player => ({
-                                id: String(player.id),
-                                name: String(player.name).trim()
-                            }));
-                        
-                        console.log('💾 Saving clean players:', cleanPlayers);
-                        
-                        // Save to localStorage
-                        localStorage.setItem('bakken-players', JSON.stringify(cleanPlayers));
-                        localStorage.setItem('bakken-players-last-update', Date.now().toString());
-                        localStorage.setItem('bakken-players-count', cleanPlayers.length.toString());
-                        
-                        // Verify the save worked
-                        const verification = localStorage.getItem('bakken-players');
-                        if (verification) {
-                            const verifiedData = JSON.parse(verification);
-                            if (Array.isArray(verifiedData) && verifiedData.length === cleanPlayers.length) {
-                                console.log('✅ Save verification successful');
-                                updateDebugInfo();
-                                resolve(true);
-                                return;
-                            }
-                        }
-                        
-                        throw new Error('Save verification failed');
-                        
-                    } catch (e) {
-                        console.error(`❌ Save attempt ${attempts} failed:`, e);
-                        
-                        if (attempts < MAX_SAVE_ATTEMPTS) {
-                            setTimeout(attemptSave, 100 * attempts);
-                        } else {
-                            console.error('❌ All save attempts failed');
-                            showMessage('⚠️ Error saving players - please try again', '#FF6B6B');
-                            updateDebugInfo();
-                            reject(e);
-                        }
-                    }
-                }
-                
-                attemptSave();
-            });
-        }
-
         function savePlayers() {
-            guaranteedSave().then(() => {
+            try {
+                localStorage.setItem('bakken-players', JSON.stringify(players));
+                localStorage.setItem('bakken-players-last-update', Date.now().toString());
+                console.log('💾 Saved players:', players.length);
+                
                 // Sync to cloud if available
-                if (window.syncManager && syncInitialized) {
-                    try {
-                        const cleanPlayers = players.map(player => ({
-                            id: player.id,
-                            name: player.name
-                        }));
-                        window.syncManager.syncPlayers(cleanPlayers);
-                        console.log('☁️ Players synced to cloud');
-                    } catch (error) {
-                        console.error('❌ Cloud sync failed:', error);
-                    }
+                if (window.syncManager && window.syncManager.syncPlayers) {
+                    window.syncManager.syncPlayers(players);
                 }
-            }).catch(error => {
-                console.error('❌ Save failed:', error);
-            });
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showMessage('⚠️ Fejl ved gemning', '#FF6B6B');
+            }
         }
 
         function setupEventListeners() {
-            // Player input events
             addPlayerBtn.addEventListener('click', addPlayer);
             clearAllBtn.addEventListener('click', clearAllPlayers);
             
             playerInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    e.preventDefault();
                     addPlayer();
                 }
             });
             
             playerInput.addEventListener('input', function() {
-                const value = this.value.trim();
-                addPlayerBtn.disabled = value.length === 0;
-                
-                // Real-time validation
-                if (value.length > 0) {
-                    const exists = players.some(player => 
-                        player.name.toLowerCase() === value.toLowerCase()
-                    );
-                    
-                    if (exists) {
-                        this.setCustomValidity('Spilleren findes allerede');
-                        this.classList.add('error');
-                    } else {
-                        this.setCustomValidity('');
-                        this.classList.remove('error');
-                    }
-                }
+                addPlayerBtn.disabled = this.value.trim().length === 0;
             });
 
-            // Quick actions
-            addDemoPlayersBtn.addEventListener('click', addDemoPlayers);
-            importPlayersBtn.addEventListener('click', openImportModal);
-
-            // Import modal events
-            importTextarea.addEventListener('input', updateImportPreview);
-
-            // Continue button with guaranteed data transfer
             continueBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
                 if (players.length < 3) {
+                    e.preventDefault();
                     showMessage('⚠️ Minimum 3 spillere krævet', '#FF9A42');
-                    return;
-                }
-                
-                // Show loading state
-                continueBtn.disabled = true;
-                continueBtn.innerHTML = `
-                    <span class="btn-icon">⏳</span>
-                    <span class="btn-text">Gemmer spillere...</span>
-                `;
-                
-                // Force save with verification
-                guaranteedSave().then(() => {
-                    // Additional verification
-                    const verification = JSON.parse(localStorage.getItem('bakken-players') || '[]');
-                    
-                    if (verification.length === players.length) {
-                        showMessage('✅ Spillere gemt - går til hold-siden...', '#4ECDC4');
-                        
-                        // Navigate after short delay
-                        setTimeout(() => {
-                            window.location.href = 'simple-teams.html';
-                        }, 1000);
-                    } else {
-                        throw new Error('Final verification failed');
-                    }
-                }).catch(error => {
-                    console.error('❌ Critical save error:', error);
-                    showMessage('❌ Fejl ved gemning - prøv igen', '#FF6B6B');
-                    
-                    // Reset button
-                    continueBtn.disabled = false;
-                    continueBtn.innerHTML = `
-                        <span class="btn-icon">🏈</span>
-                        <span class="btn-text">Næste: Opret Hold</span>
-                        <span class="btn-arrow">→</span>
-                    `;
-                });
-            });
-
-            // Sync event listeners
-            window.addEventListener('bakken-data-updated', function(event) {
-                if (event.detail.table === 'players' && event.detail.source === 'remote') {
-                    console.log('🔄 Players updated from remote source');
-                    loadPlayers();
-                    updateUI();
-                    updateDebugInfo();
-                    showMessage('🔄 Players updated from another device', '#45B7D1');
                 }
             });
 
-            window.addEventListener('bakken-data-loaded', function() {
-                console.log('📥 Data loaded from cloud event');
-                loadPlayers();
-                updateUI();
-                updateDebugInfo();
-            });
-
-            window.addEventListener('sync-status-changed', function(event) {
-                console.log('📊 Sync status changed:', event.detail.status);
-                updateSyncStatus();
-            });
-
-            // Online/offline events
-            window.addEventListener('online', function() {
-                isOnline = true;
-                updateSyncStatus();
-                showMessage('🌐 Back online', '#4ECDC4');
-            });
-
-            window.addEventListener('offline', function() {
-                isOnline = false;
-                updateSyncStatus();
-                showMessage('📱 Offline mode', '#FF9A42');
-            });
-
-            // Auto-save when page is about to close
+            // Auto-save on page unload
             window.addEventListener('beforeunload', function() {
                 if (players.length > 0) {
-                    // Synchronous save for page unload
-                    try {
-                        const cleanPlayers = players.map(player => ({
-                            id: player.id,
-                            name: player.name
-                        }));
-                        localStorage.setItem('bakken-players', JSON.stringify(cleanPlayers));
-                        localStorage.setItem('bakken-players-last-update', Date.now().toString());
-                    } catch (e) {
-                        console.error('❌ Beforeunload save failed:', e);
-                    }
+                    savePlayers();
                 }
             });
-
-            // Save when page becomes hidden (mobile app switching)
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'hidden' && players.length > 0) {
-                    guaranteedSave();
-                }
-            });
-
-            // Update sync status periodically
-            setInterval(updateSyncStatus, 3000);
         }
 
         function addPlayer() {
@@ -582,331 +148,101 @@
             
             if (name === '') {
                 showMessage('⚠️ Indtast et spillernavn', '#FF9A42');
-                playerInput.focus();
-                return;
-            }
-            
-            if (name.length < 2) {
-                showMessage('⚠️ Navnet skal være mindst 2 tegn', '#FF9A42');
-                playerInput.focus();
                 return;
             }
             
             if (players.some(player => player.name.toLowerCase() === name.toLowerCase())) {
                 showMessage('⚠️ Spilleren findes allerede', '#FF9A42');
-                playerInput.focus();
-                playerInput.select();
                 return;
             }
             
             const newPlayer = {
-                id: generatePlayerId(),
+                id: generateId(),
                 name: name
             };
             
             players.push(newPlayer);
-            console.log('➕ Added player:', newPlayer);
-            console.log('📊 Total players now:', players.length);
-            
             playerInput.value = '';
-            playerInput.classList.remove('error');
             addPlayerBtn.disabled = true;
             
             savePlayers();
             updateUI();
-            updateDebugInfo();
-            showMessage(`✅ ${name} tilføjet!`, '#4ECDC4');
+            showMessage('✅ ' + name + ' tilføjet!', '#4ECDC4');
             
-            // Focus back to input for quick adding
             playerInput.focus();
         }
 
         function removePlayer(playerId) {
             const player = players.find(p => p.id === playerId);
-            if (!player) return;
-            
-            if (confirm(`Fjern ${player.name} fra listen?`)) {
+            if (player && confirm('Fjern ' + player.name + '?')) {
                 players = players.filter(p => p.id !== playerId);
-                console.log('🗑️ Removed player:', player);
-                console.log('📊 Total players now:', players.length);
-                
                 savePlayers();
                 updateUI();
-                updateDebugInfo();
-                showMessage(`🗑️ ${player.name} fjernet`, '#FF9A42');
+                showMessage('🗑️ ' + player.name + ' fjernet', '#FF9A42');
             }
         }
 
         function clearAllPlayers() {
             if (players.length === 0) return;
             
-            if (confirm(`Fjern alle ${players.length} spillere?\n\nDette kan ikke fortrydes.`)) {
+            if (confirm('Fjern alle ' + players.length + ' spillere?')) {
                 players = [];
-                console.log('🗑️ All players cleared');
-                
                 savePlayers();
                 updateUI();
-                updateDebugInfo();
                 showMessage('🗑️ Alle spillere fjernet', '#FF9A42');
             }
-        }
-
-        function addDemoPlayers() {
-            const demoNames = [
-                'Anders', 'Birgitte', 'Christian', 'Dorte', 'Erik', 'Freja',
-                'Gustav', 'Hanne', 'Ivan', 'Janne', 'Klaus', 'Louise'
-            ];
-            
-            const newPlayers = demoNames
-                .filter(name => !players.some(p => p.name.toLowerCase() === name.toLowerCase()))
-                .slice(0, 8)
-                .map(name => ({
-                    id: generatePlayerId(),
-                    name: name
-                }));
-            
-            if (newPlayers.length === 0) {
-                showMessage('⚠️ Demo spillere er allerede tilføjet', '#FF9A42');
-                return;
-            }
-            
-            players.push(...newPlayers);
-            console.log('⚡ Added demo players:', newPlayers);
-            console.log('📊 Total players now:', players.length);
-            
-            savePlayers();
-            updateUI();
-            updateDebugInfo();
-            showMessage(`✅ ${newPlayers.length} demo spillere tilføjet`, '#4ECDC4');
-        }
-
-        function openImportModal() {
-            importModal.classList.add('active');
-            importTextarea.focus();
-        }
-
-        function closeImportModal() {
-            importModal.classList.remove('active');
-            importTextarea.value = '';
-            importPreview.style.display = 'none';
-            confirmImportBtn.disabled = true;
-        }
-
-        function updateImportPreview() {
-            const text = importTextarea.value.trim();
-            if (!text) {
-                importPreview.style.display = 'none';
-                confirmImportBtn.disabled = true;
-                return;
-            }
-            
-            const names = text.split('\n')
-                .map(name => name.trim())
-                .filter(name => name.length > 0)
-                .filter(name => !players.some(p => p.name.toLowerCase() === name.toLowerCase()));
-            
-            if (names.length === 0) {
-                importPreview.style.display = 'none';
-                confirmImportBtn.disabled = true;
-                return;
-            }
-            
-            previewList.innerHTML = names.map(name => `
-                <div class="preview-item">${escapeHtml(name)}</div>
-            `).join('');
-            
-            importPreview.style.display = 'block';
-            confirmImportBtn.disabled = false;
-            confirmImportBtn.textContent = `Importer ${names.length} spillere`;
-        }
-
-        function confirmImport() {
-            const text = importTextarea.value.trim();
-            const names = text.split('\n')
-                .map(name => name.trim())
-                .filter(name => name.length > 0)
-                .filter(name => !players.some(p => p.name.toLowerCase() === name.toLowerCase()));
-            
-            if (names.length === 0) return;
-            
-            const newPlayers = names.map(name => ({
-                id: generatePlayerId(),
-                name: name
-            }));
-            
-            players.push(...newPlayers);
-            console.log('📋 Imported players:', newPlayers);
-            console.log('📊 Total players now:', players.length);
-            
-            savePlayers();
-            updateUI();
-            updateDebugInfo();
-            closeImportModal();
-            showMessage(`✅ ${newPlayers.length} spillere importeret`, '#4ECDC4');
         }
 
         function updateUI() {
             updatePlayersList();
             updatePlayerCount();
             updateContinueButton();
-            updateQuickActions();
-            updateStats();
-            updateRequirementStatus();
         }
 
         function updatePlayersList() {
             if (players.length === 0) {
-                playersList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">👥</div>
-                        <h3>Ingen spillere tilføjet endnu</h3>
-                        <p>Tilføj spillere for at starte turneringen</p>
-                    </div>
-                `;
+                playersList.innerHTML = '<div class="empty-message">Ingen spillere tilføjet endnu</div>';
                 clearAllBtn.style.display = 'none';
                 return;
             }
             
-            playersList.innerHTML = players.map((player, index) => `
-                <div class="player-item" style="animation-delay: ${index * 0.05}s">
-                    <div class="player-info">
-                        <div class="player-avatar">${getPlayerInitials(player.name)}</div>
-                        <div class="player-details">
-                            <span class="player-name">${escapeHtml(player.name)}</span>
-                            <span class="player-meta">ID: ${player.id.slice(-6)}</span>
-                        </div>
-                    </div>
-                    <button class="remove-btn" onclick="removePlayer('${player.id}')" title="Fjern ${escapeHtml(player.name)}">
-                        <span class="remove-icon">×</span>
-                    </button>
-                </div>
-            `).join('');
+            playersList.innerHTML = players.map(player => 
+                '<div class="player-item">' +
+                    '<span class="player-name">' + escapeHtml(player.name) + '</span>' +
+                    '<button class="remove-btn" onclick="removePlayer(\'' + player.id + '\')">×</button>' +
+                '</div>'
+            ).join('');
             
-            clearAllBtn.style.display = 'inline-flex';
+            clearAllBtn.style.display = 'inline-block';
         }
 
         function updatePlayerCount() {
             playerCount.textContent = players.length;
-            
-            // Animate count change
-            playerCount.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                playerCount.style.transform = 'scale(1)';
-            }, 200);
         }
 
         function updateContinueButton() {
-            const hasEnoughPlayers = players.length >= 3;
-            
-            if (hasEnoughPlayers) {
+            if (players.length >= 3) {
                 continueBtn.classList.remove('disabled');
-                continueBtn.disabled = false;
                 continueBtn.style.pointerEvents = 'auto';
-                continueBtn.setAttribute('aria-disabled', 'false');
             } else {
                 continueBtn.classList.add('disabled');
-                continueBtn.disabled = true;
                 continueBtn.style.pointerEvents = 'none';
-                continueBtn.setAttribute('aria-disabled', 'true');
             }
         }
 
-        function updateQuickActions() {
-            if (players.length === 0) {
-                quickActionsSection.style.display = 'block';
-            } else {
-                quickActionsSection.style.display = 'none';
-            }
-        }
-
-        function updateStats() {
-            if (players.length >= 3) {
-                statsSection.style.display = 'block';
-                
-                const teamCount = Math.min(3, Math.max(2, Math.ceil(players.length / 3)));
-                const avgPerTeam = Math.round(players.length / teamCount * 10) / 10;
-                
-                totalPlayers.textContent = players.length;
-                estimatedTeams.textContent = teamCount;
-                avgPlayersPerTeam.textContent = avgPerTeam;
-            } else {
-                statsSection.style.display = 'none';
-            }
-        }
-
-        function updateRequirementStatus() {
-            const hasEnoughPlayers = players.length >= 3;
-            
-            if (hasEnoughPlayers) {
-                minPlayersReq.classList.add('completed');
-                minPlayersReq.querySelector('.req-icon').textContent = '✅';
-                minPlayersReq.querySelector('.req-status').textContent = `${players.length}/3`;
-            } else {
-                minPlayersReq.classList.remove('completed');
-                minPlayersReq.querySelector('.req-icon').textContent = '⭕';
-                minPlayersReq.querySelector('.req-status').textContent = `${players.length}/3`;
-            }
-        }
-
-        function updateDebugInfo() {
-            try {
-                const localStorageData = localStorage.getItem('bakken-players');
-                const lastUpdate = localStorage.getItem('bakken-players-last-update');
-                
-                debugLocalStorage.textContent = localStorageData ? 'OK' : 'EMPTY';
-                debugPlayersArray.textContent = `[${players.length}] ${players.map(p => p.name).join(', ')}`;
-                debugLastSave.textContent = lastUpdate ? new Date(parseInt(lastUpdate)).toLocaleTimeString() : 'Never';
-                
-                debugLocalStorage.style.color = localStorageData ? '#4ECDC4' : '#FF6B6B';
-            } catch (e) {
-                debugLocalStorage.textContent = 'ERROR';
-                debugLocalStorage.style.color = '#FF6B6B';
-            }
-        }
-
-        function verifyDataIntegrity() {
-            try {
-                const localStorageData = localStorage.getItem('bakken-players');
-                if (localStorageData) {
-                    const storedPlayers = JSON.parse(localStorageData);
-                    if (storedPlayers.length !== players.length) {
-                        console.warn('⚠️ Data integrity issue detected');
-                        updateDebugInfo();
-                    }
-                }
-            } catch (e) {
-                console.error('❌ Data integrity check failed:', e);
-            }
-        }
-
-        function updateSyncStatus() {
-            if (!syncInitialized) {
-                statusIndicator.textContent = '🔄';
-                statusText.textContent = 'Initializing...';
-                syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
-                return;
-            }
-
+        function initSync() {
             if (window.syncManager) {
-                const status = window.syncManager.getStatus();
-                
-                if (!status.hasSupabase) {
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Local only';
-                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
-                } else if (!isOnline) {
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Offline';
-                    syncStatus.style.background = 'rgba(255, 154, 66, 0.3)';
-                } else if (status.pendingSync > 0) {
-                    statusIndicator.textContent = '⏳';
-                    statusText.textContent = `Syncing...`;
-                    syncStatus.style.background = 'rgba(69, 183, 209, 0.3)';
-                } else {
+                window.syncManager.initialize().then(() => {
+                    console.log('✅ Sync initialized');
                     statusIndicator.textContent = '☁️';
                     statusText.textContent = 'Synced';
                     syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
-                }
+                }).catch(() => {
+                    console.log('📱 Offline mode');
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Local only';
+                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+                });
             } else {
                 statusIndicator.textContent = '📱';
                 statusText.textContent = 'Local only';
@@ -914,72 +250,37 @@
             }
         }
 
-        function showWelcomeMessage() {
-            const welcomeDiv = document.createElement('div');
-            welcomeDiv.className = 'welcome-message';
-            welcomeDiv.innerHTML = `
-                <div class="welcome-content">
-                    <h3>🏈 Velkommen til Håndæg og Håndbajere!</h3>
-                    <p>Start med at tilføje spillere til din turnering.</p>
-                    <button onclick="this.parentElement.parentElement.remove()" class="welcome-btn">
-                        Kom i gang
-                    </button>
-                </div>
-            `;
-            document.body.appendChild(welcomeDiv);
-            
-            setTimeout(() => {
-                if (welcomeDiv.parentNode) {
-                    welcomeDiv.remove();
-                }
-            }, 8000);
-        }
-
         function showMessage(message, color) {
-            const existingMessage = document.querySelector('.toast-message');
+            const existingMessage = document.querySelector('.message');
             if (existingMessage) existingMessage.remove();
             
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'toast-message';
-            messageDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${color};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                z-index: 2000;
-                animation: slideDown 0.3s ease;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                font-weight: 500;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255,255,255,0.1);
-                max-width: 90vw;
-                text-align: center;
-            `;
+            messageDiv.className = 'message';
+            messageDiv.style.cssText = 
+                'position: fixed;' +
+                'top: 20px;' +
+                'left: 50%;' +
+                'transform: translateX(-50%);' +
+                'background: ' + color + ';' +
+                'color: white;' +
+                'padding: 12px 20px;' +
+                'border-radius: 8px;' +
+                'z-index: 1000;' +
+                'animation: slideDown 0.3s ease;' +
+                'box-shadow: 0 4px 15px rgba(0,0,0,0.2);' +
+                'font-weight: 500;';
             messageDiv.textContent = message;
             document.body.appendChild(messageDiv);
             
-            setTimeout(() => {
+            setTimeout(function() {
                 if (messageDiv.parentNode) {
-                    messageDiv.style.animation = 'slideUp 0.3s ease forwards';
-                    setTimeout(() => messageDiv.remove(), 300);
+                    messageDiv.remove();
                 }
             }, 3000);
         }
 
-        // Utility functions
-        function generatePlayerId() {
+        function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
-
-        function getPlayerInitials(name) {
-            return name.split(' ')
-                .map(word => word.charAt(0).toUpperCase())
-                .slice(0, 2)
-                .join('');
         }
 
         function escapeHtml(text) {
@@ -988,195 +289,20 @@
             return div.innerHTML;
         }
 
-        // Debug functions
+        // Add simple animations
+        const style = document.createElement('style');
+        style.textContent = 
+            '@keyframes slideDown {' +
+                'from { opacity: 0; transform: translateX(-50%) translateY(-20px); }' +
+                'to { opacity: 1; transform: translateX(-50%) translateY(0); }' +
+            '}';
+        document.head.appendChild(style);
+
+        // Debug function
         window.debugPlayers = function() {
-            console.log('🔍 Debug Players Data:');
-            console.log('Players Array:', players);
-            console.log('Players Count:', players.length);
-            console.log('Sync Initialized:', syncInitialized);
-            console.log('Is Online:', isOnline);
-            console.log('LocalStorage Raw:', localStorage.getItem('bakken-players'));
-            console.log('LocalStorage Parsed:', JSON.parse(localStorage.getItem('bakken-players') || '[]'));
-            if (window.syncManager) {
-                console.log('Sync Status:', window.syncManager.getStatus());
-            }
+            console.log('Players:', players);
+            console.log('LocalStorage:', localStorage.getItem('bakken-players'));
         };
-
-        window.testDataTransfer = function() {
-            console.log('🧪 Testing data transfer...');
-            const testData = [
-                { id: 'test1', name: 'Test Player 1' },
-                { id: 'test2', name: 'Test Player 2' },
-                { id: 'test3', name: 'Test Player 3' }
-            ];
-            
-            localStorage.setItem('bakken-players', JSON.stringify(testData));
-            console.log('✅ Test data saved to localStorage');
-            
-            const verification = JSON.parse(localStorage.getItem('bakken-players'));
-            console.log('✅ Verification:', verification);
-            
-            updateDebugInfo();
-            return verification.length === 3;
-        };
-
-        window.forceDataSave = function() {
-            console.log('🔧 Force saving current data...');
-            guaranteedSave().then(() => {
-                console.log('✅ Force save completed');
-                updateDebugInfo();
-            }).catch(error => {
-                console.error('❌ Force save failed:', error);
-            });
-        };
-
-        window.showDebugInfo = function() {
-            debugSection.style.display = debugSection.style.display === 'none' ? 'block' : 'none';
-        };
-
-        window.resetApp = function() {
-            if (confirm('Reset entire app? This will delete all data.')) {
-                localStorage.clear();
-                location.reload();
-            }
-        };
-
-        // Add animations
-        if (!document.getElementById('players-animations')) {
-            const animationStyle = document.createElement('style');
-            animationStyle.id = 'players-animations';
-            animationStyle.textContent = `
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-                }
-                
-                @keyframes slideUp {
-                    from { opacity: 1; transform: translateX(-50%) translateY(0); }
-                    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                }
-                
-                @keyframes slideInLeft {
-                    from { opacity: 0; transform: translateX(-20px); }
-                    to { opacity: 1; transform: translateX(0); }
-                }
-                
-                .player-item {
-                    animation: slideInLeft 0.3s ease forwards;
-                }
-                
-                .welcome-message {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 3000;
-                    animation: fadeIn 0.3s ease;
-                }
-                
-                .welcome-content {
-                    background: white;
-                    padding: 30px;
-                    border-radius: 15px;
-                    text-align: center;
-                    max-width: 400px;
-                    margin: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                }
-                
-                .welcome-content h3 {
-                    color: #333;
-                    margin-bottom: 15px;
-                    font-size: 1.3rem;
-                }
-                
-                .welcome-content p {
-                    color: #666;
-                    margin-bottom: 20px;
-                    line-height: 1.5;
-                }
-                
-                .welcome-btn {
-                    background: #FFB366;
-                    color: white;
-                    border: none;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                }
-                
-                .welcome-btn:hover {
-                    background: #FF9A42;
-                    transform: translateY(-2px);
-                }
-                
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                
-                .debug-section {
-                    background: rgba(0, 0, 0, 0.1);
-                    border-radius: 10px;
-                    padding: 15px;
-                    margin-top: 20px;
-                    font-family: monospace;
-                    font-size: 0.8rem;
-                }
-                
-                .debug-info {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                    margin-bottom: 10px;
-                }
-                
-                .debug-item {
-                    display: flex;
-                    justify-content: space-between;
-                }
-                
-                .debug-label {
-                    font-weight: bold;
-                }
-                
-                .debug-value {
-                    font-family: monospace;
-                    max-width: 200px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-                
-                .debug-actions {
-                    display: flex;
-                    gap: 5px;
-                    flex-wrap: wrap;
-                }
-                
-                .debug-btn {
-                    background: #666;
-                    color: white;
-                    border: none;
-                    padding: 5px 10px;
-                    border-radius: 4px;
-                    font-size: 0.7rem;
-                    cursor: pointer;
-                }
-                
-                .debug-btn:hover {
-                    background: #555;
-                }
-            `;
-            document.head.appendChild(animationStyle);
-        }
     </script>
 </body>
 </html>
