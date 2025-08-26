@@ -48,14 +48,14 @@
                     </button>
                 </div>
                 <div class="add-game-hint">
-                    <small>Tilføj spil først, derefter kan du indtaste resultater</small>
+                    <small>Tilføj spil først, derefter kan du starte dem når I er klar</small>
                 </div>
             </div>
         </section>
 
         <!-- Games List -->
         <section class="games-list-section">
-            <h2 class="section-title">🎮 Spil Oversigt</h2>
+            <h2 class="section-title">🎮 Ventende Spil</h2>
             <div class="games-list" id="gamesList">
                 <div class="no-games">
                     <div class="no-games-icon">🎮</div>
@@ -143,7 +143,7 @@
     </div>
 
     <script>
-        // Games management with add games first, then results
+        // Games management - FIXED: No auto-start when adding games
         let teams = [];
         let games = [];
         let currentGame = null;
@@ -289,13 +289,16 @@
             games.push(newGame);
             console.log('➕ Added game:', newGame);
             
+            // Clear input and update UI
             gameNameInput.value = '';
             addGameBtn.disabled = true;
             
+            // Save and update - NO AUTO-START
             saveData();
             updateUI();
-            showMessage(`✅ "${gameName}" tilføjet!`, '#4ECDC4');
+            showMessage(`✅ "${gameName}" tilføjet til spil listen!`, '#4ECDC4');
             
+            // Focus back to input for adding more games
             gameNameInput.focus();
         }
 
@@ -323,6 +326,9 @@
             activeGameSection.scrollIntoView({ behavior: 'smooth' });
             
             showMessage(`🎯 Starter "${game.name}" - vælg placeringer`, '#45B7D1');
+            
+            // Update games list to remove this game from pending
+            updateGamesList();
         }
 
         function generateTeamButtons() {
@@ -471,10 +477,18 @@
         }
 
         function cancelResultEntry() {
+            if (currentGame) {
+                // Reset game status back to pending if we cancel
+                currentGame.status = 'pending';
+            }
+            
             currentGame = null;
             selectedResults = { first: null, second: null, third: null };
             activeGameSection.style.display = 'none';
             saveResultBtn.disabled = true;
+            
+            // Update UI to show the game back in pending list
+            updateUI();
         }
 
         function deleteGame(gameId) {
@@ -514,7 +528,7 @@
                 <div class="game-item">
                     <div class="game-info">
                         <div class="game-name">${escapeHtml(game.name)}</div>
-                        <div class="game-status">Venter på at blive spillet</div>
+                        <div class="game-status">⏳ Venter på at blive spillet</div>
                     </div>
                     <div class="game-actions">
                         <button class="game-btn primary" onclick="startGame('${game.id}')">
