@@ -94,7 +94,7 @@
     </div>
 
     <script>
-        // Teams management with enhanced data loading
+        // Teams management with proper initialization
         let players = [];
         let teams = [];
         let teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
@@ -141,18 +141,25 @@
                 // Step 1: Load local data first
                 loadLocalData();
                 
-                // Step 2: Initialize sync manager
+                // Step 2: Initialize teams if needed
+                ensureTeamsInitialized();
+                
+                // Step 3: Initialize sync manager if available
                 if (window.syncManager) {
-                    await window.syncManager.initialize();
-                    console.log('✅ Sync manager ready');
-                    
-                    // Step 3: Load fresh data from cloud
-                    await loadCloudData();
+                    try {
+                        await window.syncManager.initialize();
+                        console.log('✅ Sync manager ready');
+                        
+                        // Step 4: Try to load fresh data from cloud
+                        await loadCloudData();
+                    } catch (error) {
+                        console.warn('⚠️ Sync manager initialization failed:', error);
+                    }
                 } else {
                     console.warn('⚠️ No sync manager available');
                 }
                 
-                // Step 4: Finalize loading
+                // Step 5: Finalize loading
                 finishLoading();
                 
             } catch (error) {
@@ -168,21 +175,49 @@
                 if (playersData) {
                     players = JSON.parse(playersData);
                     console.log('📥 Loaded local players:', players.length);
+                } else {
+                    players = [];
+                    console.log('📥 No players found in localStorage');
                 }
 
                 // Load teams from localStorage
                 const teamsData = localStorage.getItem('bakken-teams');
                 if (teamsData) {
-                    const savedData = JSON.parse(teamsData);
-                    teams = savedData.teams || [];
-                    teamNames = savedData.teamNames || ['Hold 1', 'Hold 2', 'Hold 3'];
-                    console.log('📥 Loaded local teams:', teams.length);
+                    try {
+                        const savedData = JSON.parse(teamsData);
+                        teams = Array.isArray(savedData.teams) ? savedData.teams : [];
+                        teamNames = Array.isArray(savedData.teamNames) ? savedData.teamNames : ['Hold 1', 'Hold 2', 'Hold 3'];
+                        console.log('📥 Loaded local teams:', teams.length);
+                    } catch (e) {
+                        console.warn('⚠️ Invalid teams data, initializing fresh');
+                        teams = [];
+                        teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
+                    }
+                } else {
+                    teams = [];
+                    teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
+                    console.log('📥 No teams found in localStorage');
                 }
             } catch (e) {
                 console.error('❌ Error loading local data:', e);
                 players = [];
                 teams = [];
+                teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
             }
+        }
+
+        function ensureTeamsInitialized() {
+            // Always ensure teams is an array
+            if (!Array.isArray(teams)) {
+                teams = [];
+            }
+            
+            // Initialize teams if we have players but no teams
+            if (players.length > 0 && teams.length === 0) {
+                initializeTeams();
+            }
+            
+            console.log('✅ Teams ensured:', teams.length);
         }
 
         async function loadCloudData() {
@@ -201,7 +236,7 @@
                     let dataUpdated = false;
                     
                     // Update players from cloud if available
-                    if (cloudData.players && cloudData.players.length > 0) {
+                    if (cloudData.players && Array.isArray(cloudData.players) && cloudData.players.length > 0) {
                         const cleanPlayers = cloudData.players.map(p => ({ 
                             id: p.id, 
                             name: p.name 
@@ -217,12 +252,20 @@
                     }
                     
                     // Update teams from cloud if available
-                    if (cloudData.teams) {
-                        teams = cloudData.teams.teams || [];
-                        teamNames = cloudData.teams.teamNames || ['Hold 1', 'Hold 2', 'Hold 3'];
-                        localStorage.setItem('bakken-teams', JSON.stringify(cloudData.teams));
-                        dataUpdated = true;
-                        console.log('✅ Updated teams from cloud');
+                    if (cloudData.teams && cloudData.teams.teams_data) {
+                        const cloudTeams = cloudData.teams.teams_data;
+                        const cloudTeamNames = cloudData.teams.team_names || ['Hold 1', 'Hold 2', 'Hold 3'];
+                        
+                        if (Array.isArray(cloudTeams)) {
+                            teams = cloudTeams;
+                            teamNames = cloudTeamNames;
+                            localStorage.setItem('bakken-teams', JSON.stringify({
+                                teams: teams,
+                                teamNames: teamNames
+                            }));
+                            dataUpdated = true;
+                            console.log('✅ Updated teams from cloud');
+                        }
                     }
                     
                     if (dataUpdated) {
@@ -239,10 +282,8 @@
             clearTimeout(loadingTimeout);
             isDataLoaded = true;
             
-            // Initialize teams if needed
-            if (teams.length === 0 && players.length > 0) {
-                initializeTeams();
-            }
+            // Ensure teams are initialized
+            ensureTeamsInitialized();
             
             // Show appropriate state
             if (players.length === 0) {
@@ -327,9 +368,7 @@
                 if (event.detail.table === 'players' && event.detail.source === 'remote') {
                     console.log('🔄 Players updated from remote');
                     loadLocalData();
-                    if (teams.length === 0) {
-                        initializeTeams();
-                    }
+                    ensureTeamsInitialized();
                     updateUI();
                     showMessage('🔄 Players updated from another device', '#45B7D1');
                 }
@@ -352,6 +391,12 @@
         function updateUI() {
             if (!isDataLoaded) return;
             
+            // Ensure teams is always an array before updating UI
+            if (!Array.isArray(teams)) {
+                teams = [];
+                ensureTeamsInitialized();
+            }
+            
             updateTeamNamesGrid();
             updateTeamsGrid();
             updatePlayersPool();
@@ -360,7 +405,7 @@
         }
 
         function updateTeamNamesGrid() {
-            if (teams.length === 0) {
+            if (!Array.isArray(teams) || teams.length === 0) {
                 teamNamesGrid.innerHTML = '<p>Initialiserer hold...</p>';
                 return;
             }
@@ -375,7 +420,7 @@
         }
 
         function updateTeamsGrid() {
-            if (teams.length === 0) {
+            if (!Array.isArray(teams) || teams.length === 0) {
                 teamsGrid.innerHTML = '<p>Initialiserer hold...</p>';
                 return;
             }
@@ -387,13 +432,13 @@
                             <div class="team-color-indicator team-${index + 1}-color"></div>
                             <span class="team-name">${escapeHtml(team.name)}</span>
                         </div>
-                        <span class="team-count">${team.players.length}</span>
+                        <span class="team-count">${(team.players || []).length}</span>
                     </div>
-                    <div class="team-players ${team.players.length === 0 ? 'empty' : ''}" 
+                    <div class="team-players ${(team.players || []).length === 0 ? 'empty' : ''}" 
                          data-team-id="${team.id}"
                          ondrop="dropPlayer(event, ${team.id})"
                          ondragover="allowDrop(event)">
-                        ${team.players.map(player => `
+                        ${(team.players || []).map(player => `
                             <div class="player-chip in-team-${index + 1}" 
                                  draggable="true" 
                                  data-player-id="${player.id}"
@@ -449,12 +494,18 @@
         }
 
         function getUnassignedPlayers() {
-            const assignedPlayerIds = teams.flatMap(team => team.players.map(p => p.id));
+            if (!Array.isArray(teams) || !Array.isArray(players)) {
+                return players || [];
+            }
+            
+            const assignedPlayerIds = teams.flatMap(team => 
+                (team.players || []).map(p => p.id)
+            );
             return players.filter(player => !assignedPlayerIds.includes(player.id));
         }
 
         function updateTeamName(index, newName) {
-            if (teams[index]) {
+            if (Array.isArray(teams) && teams[index]) {
                 teams[index].name = newName.trim() || `Hold ${index + 1}`;
                 teamNames[index] = teams[index].name;
                 saveData();
@@ -469,7 +520,7 @@
                 return;
             }
             
-            if (teams.length === 0) {
+            if (!Array.isArray(teams) || teams.length === 0) {
                 initializeTeams();
             }
             
@@ -491,7 +542,7 @@
         }
 
         function resetTeams() {
-            if (teams.length === 0) {
+            if (!Array.isArray(teams) || teams.length === 0) {
                 alert('Ingen hold at nulstille');
                 return;
             }
@@ -539,12 +590,17 @@
             
             // Remove player from current team
             teams.forEach(team => {
-                team.players = team.players.filter(p => p.id !== playerId);
+                if (team.players) {
+                    team.players = team.players.filter(p => p.id !== playerId);
+                }
             });
             
             // Add player to new team
             const targetTeam = teams.find(t => t.id === teamId);
             if (targetTeam) {
+                if (!targetTeam.players) {
+                    targetTeam.players = [];
+                }
                 targetTeam.players.push(player);
             }
             
@@ -671,7 +727,7 @@
 
         // Auto-save when page is about to close
         window.addEventListener('beforeunload', function() {
-            if (teams.length > 0) {
+            if (Array.isArray(teams) && teams.length > 0) {
                 saveData();
             }
         });
