@@ -16,45 +16,155 @@
             <p class="app-subtitle">Tilføj Spillere</p>
             <div class="sync-status" id="syncStatus">
                 <span class="status-indicator" id="statusIndicator">🔄</span>
-                <span class="status-text" id="statusText">Connecting...</span>
+                <span class="status-text" id="statusText">Initializing...</span>
             </div>
         </header>
 
         <!-- Player Input -->
         <section class="input-section">
             <div class="input-group">
-                <input type="text" id="playerInput" placeholder="Indtast spillernavn" maxlength="30">
-                <button id="addPlayerBtn" class="add-btn">
-                    Tilføj Spiller
+                <input type="text" 
+                       id="playerInput" 
+                       placeholder="Indtast spillernavn" 
+                       maxlength="30"
+                       autocomplete="off"
+                       spellcheck="false">
+                <button id="addPlayerBtn" class="add-btn" disabled>
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">Tilføj Spiller</span>
                 </button>
+            </div>
+            <div class="input-hints">
+                <small>Minimum 3 spillere krævet for at fortsætte</small>
             </div>
         </section>
 
         <!-- Players List -->
         <section class="players-section">
-            <h2 class="section-title">
-                Spillere 
-                <span class="player-count" id="playerCount">0</span>
-            </h2>
-            <div class="players-list" id="playersList">
-                <p class="empty-message">Ingen spillere tilføjet endnu</p>
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="title-icon">👥</span>
+                    Spillere 
+                    <span class="player-count" id="playerCount">0</span>
+                </h2>
+                <div class="section-actions">
+                    <button id="clearAllBtn" class="action-btn secondary" style="display: none;">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">Ryd Alle</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="players-container">
+                <div class="players-list" id="playersList">
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h3>Ingen spillere tilføjet endnu</h3>
+                        <p>Tilføj spillere for at starte turneringen</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions-section" id="quickActionsSection" style="display: none;">
+            <h3 class="section-subtitle">Hurtige Handlinger</h3>
+            <div class="quick-actions">
+                <button id="addDemoPlayersBtn" class="quick-btn">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-text">Tilføj Demo Spillere</span>
+                </button>
+                <button id="importPlayersBtn" class="quick-btn">
+                    <span class="btn-icon">📋</span>
+                    <span class="btn-text">Importer Fra Tekst</span>
+                </button>
             </div>
         </section>
 
         <!-- Actions -->
         <section class="actions-section">
-            <button id="clearAllBtn" class="action-btn secondary">
-                🗑️ Ryd Alle
-            </button>
-            <a href="simple-teams.html" id="continueBtn" class="action-btn primary disabled">
-                Næste: Opret Hold
+            <div class="progress-indicator">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Spillere</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Hold</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Spil</div>
+                </div>
+            </div>
+            
+            <a href="simple-teams.html" id="continueBtn" class="continue-btn disabled">
+                <span class="btn-icon">🏈</span>
+                <span class="btn-text">Næste: Opret Hold</span>
+                <span class="btn-arrow">→</span>
             </a>
+            
+            <div class="requirement-status" id="requirementStatus">
+                <div class="requirement-item" id="minPlayersReq">
+                    <span class="req-icon">⭕</span>
+                    <span class="req-text">Minimum 3 spillere</span>
+                    <span class="req-status">0/3</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistics -->
+        <section class="stats-section" id="statsSection" style="display: none;">
+            <h3 class="section-subtitle">Statistik</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalPlayers">0</div>
+                    <div class="stat-label">Spillere</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="estimatedTeams">0</div>
+                    <div class="stat-label">Forventede Hold</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgPlayersPerTeam">0</div>
+                    <div class="stat-label">Spillere/Hold</div>
+                </div>
+            </div>
         </section>
     </div>
 
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Importer Spillere</h3>
+                <button class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Indtast spillernavne, et navn per linje:</p>
+                <textarea id="importTextarea" 
+                          placeholder="Spiller 1&#10;Spiller 2&#10;Spiller 3&#10;..."></textarea>
+                <div class="import-preview" id="importPreview" style="display: none;">
+                    <h4>Forhåndsvisning:</h4>
+                    <div class="preview-list" id="previewList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeImportModal()">Annuller</button>
+                <button class="modal-btn primary" id="confirmImportBtn" onclick="confirmImport()" disabled>
+                    Importer Spillere
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Enhanced player management with sync
+        // Enhanced player management system
         let players = [];
+        let syncInitialized = false;
+        let isOnline = navigator.onLine;
 
         // DOM elements
         const playerInput = document.getElementById('playerInput');
@@ -66,81 +176,196 @@
         const syncStatus = document.getElementById('syncStatus');
         const statusIndicator = document.getElementById('statusIndicator');
         const statusText = document.getElementById('statusText');
+        const quickActionsSection = document.getElementById('quickActionsSection');
+        const addDemoPlayersBtn = document.getElementById('addDemoPlayersBtn');
+        const importPlayersBtn = document.getElementById('importPlayersBtn');
+        const statsSection = document.getElementById('statsSection');
+        const requirementStatus = document.getElementById('requirementStatus');
+        const minPlayersReq = document.getElementById('minPlayersReq');
+        const totalPlayers = document.getElementById('totalPlayers');
+        const estimatedTeams = document.getElementById('estimatedTeams');
+        const avgPlayersPerTeam = document.getElementById('avgPlayersPerTeam');
+        const importModal = document.getElementById('importModal');
+        const importTextarea = document.getElementById('importTextarea');
+        const importPreview = document.getElementById('importPreview');
+        const previewList = document.getElementById('previewList');
+        const confirmImportBtn = document.getElementById('confirmImportBtn');
 
-        // Initialize
+        // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Players page starting...');
+            console.log('🚀 Bakken Players App Starting...');
+            
+            // Load existing data
             loadPlayers();
+            
+            // Setup event listeners
             setupEventListeners();
+            
+            // Update UI
             updateUI();
             updateSyncStatus();
             
-            // Initialize sync with delay to ensure Supabase is loaded
-            setTimeout(() => {
+            // Initialize sync manager
+            initializeSyncManager();
+            
+            // Show welcome message for new users
+            if (players.length === 0 && !localStorage.getItem('bakken-welcomed')) {
+                setTimeout(() => {
+                    showWelcomeMessage();
+                    localStorage.setItem('bakken-welcomed', 'true');
+                }, 1000);
+            }
+        });
+
+        async function initializeSyncManager() {
+            try {
+                statusText.textContent = 'Connecting to cloud...';
+                
                 if (window.syncManager) {
-                    window.syncManager.initialize().then(() => {
-                        console.log('✅ Sync manager initialized');
-                        loadPlayers(); // Reload in case cloud data was merged
-                        updateUI();
-                        updateSyncStatus();
-                    }).catch(error => {
-                        console.error('❌ Sync initialization failed:', error);
-                        updateSyncStatus();
-                    });
+                    await window.syncManager.initialize();
+                    console.log('✅ Sync manager initialized');
+                    
+                    // Load fresh data from cloud
+                    await loadCloudData();
+                    
+                    syncInitialized = true;
+                    updateSyncStatus();
+                    
+                    if (isOnline) {
+                        showMessage('☁️ Connected to cloud sync', '#4ECDC4');
+                    }
                 } else {
                     console.warn('⚠️ Sync manager not available');
+                    syncInitialized = true;
                     updateSyncStatus();
                 }
-            }, 1000);
-        });
+            } catch (error) {
+                console.error('❌ Sync initialization failed:', error);
+                syncInitialized = true;
+                updateSyncStatus();
+                showMessage('📱 Running in offline mode', '#FF9A42');
+            }
+        }
+
+        async function loadCloudData() {
+            if (!window.syncManager || !window.syncManager.supabase) {
+                return;
+            }
+
+            try {
+                const cloudData = await window.syncManager.loadFromCloud();
+                
+                if (cloudData && cloudData.players && cloudData.players.length > 0) {
+                    const cloudPlayers = cloudData.players.map(p => ({ 
+                        id: p.id, 
+                        name: p.name,
+                        addedAt: p.created_at || Date.now()
+                    }));
+                    
+                    // Merge with local data (cloud takes precedence)
+                    if (cloudPlayers.length !== players.length || 
+                        !cloudPlayers.every(cp => players.find(p => p.id === cp.id && p.name === cp.name))) {
+                        
+                        players = cloudPlayers;
+                        savePlayersLocally();
+                        updateUI();
+                        
+                        console.log('✅ Loaded players from cloud:', players.length);
+                        showMessage(`📥 Loaded ${players.length} players from cloud`, '#4ECDC4');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error loading cloud data:', error);
+            }
+        }
 
         function loadPlayers() {
             try {
                 const data = localStorage.getItem('bakken-players');
                 if (data) {
                     players = JSON.parse(data);
-                    console.log('📥 Loaded players:', players);
+                    // Ensure all players have required fields
+                    players = players.map(player => ({
+                        id: player.id || generatePlayerId(),
+                        name: player.name || 'Unnamed Player',
+                        addedAt: player.addedAt || Date.now()
+                    }));
+                    console.log('📥 Loaded players from localStorage:', players.length);
                 } else {
                     players = [];
                 }
             } catch (e) {
-                console.error('❌ Load failed:', e);
+                console.error('❌ Error loading players:', e);
                 players = [];
+                showMessage('⚠️ Error loading saved players', '#FF6B6B');
+            }
+        }
+
+        function savePlayersLocally() {
+            try {
+                localStorage.setItem('bakken-players', JSON.stringify(players));
+                localStorage.setItem('bakken-players-last-update', Date.now().toString());
+            } catch (e) {
+                console.error('❌ Error saving players locally:', e);
+                showMessage('⚠️ Error saving players locally', '#FF6B6B');
             }
         }
 
         function savePlayers() {
-            try {
-                localStorage.setItem('bakken-players', JSON.stringify(players));
-                localStorage.setItem('bakken-players-last-update', Date.now().toString());
-                console.log('💾 Saved players locally:', players);
-                
-                // Sync to cloud
-                if (window.syncManager && window.syncManager.isInitialized) {
+            // Save locally first
+            savePlayersLocally();
+            
+            // Sync to cloud if available
+            if (window.syncManager && syncInitialized) {
+                try {
                     window.syncManager.syncPlayers(players);
-                } else {
-                    console.log('📝 Sync manager not ready, data saved locally only');
+                    console.log('☁️ Players synced to cloud');
+                } catch (error) {
+                    console.error('❌ Cloud sync failed:', error);
                 }
-            } catch (e) {
-                console.error('❌ Save failed:', e);
             }
         }
 
         function setupEventListeners() {
+            // Player input events
             addPlayerBtn.addEventListener('click', addPlayer);
             clearAllBtn.addEventListener('click', clearAllPlayers);
             
             playerInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     addPlayer();
                 }
             });
             
             playerInput.addEventListener('input', function() {
-                addPlayerBtn.disabled = this.value.trim().length === 0;
+                const value = this.value.trim();
+                addPlayerBtn.disabled = value.length === 0;
+                
+                // Real-time validation
+                if (value.length > 0) {
+                    const exists = players.some(player => 
+                        player.name.toLowerCase() === value.toLowerCase()
+                    );
+                    
+                    if (exists) {
+                        this.setCustomValidity('Spilleren findes allerede');
+                        this.classList.add('error');
+                    } else {
+                        this.setCustomValidity('');
+                        this.classList.remove('error');
+                    }
+                }
             });
 
-            // Listen for remote data updates
+            // Quick actions
+            addDemoPlayersBtn.addEventListener('click', addDemoPlayers);
+            importPlayersBtn.addEventListener('click', openImportModal);
+
+            // Import modal events
+            importTextarea.addEventListener('input', updateImportPreview);
+
+            // Sync event listeners
             window.addEventListener('bakken-data-updated', function(event) {
                 if (event.detail.table === 'players' && event.detail.source === 'remote') {
                     console.log('🔄 Players updated from remote source');
@@ -150,17 +375,35 @@
                 }
             });
 
-            // Listen for data loaded from cloud
             window.addEventListener('bakken-data-loaded', function() {
-                console.log('📥 Data loaded from cloud');
+                console.log('📥 Data loaded from cloud event');
                 loadPlayers();
                 updateUI();
             });
 
-            // Listen for sync status changes
             window.addEventListener('sync-status-changed', function(event) {
                 console.log('📊 Sync status changed:', event.detail.status);
                 updateSyncStatus();
+            });
+
+            // Online/offline events
+            window.addEventListener('online', function() {
+                isOnline = true;
+                updateSyncStatus();
+                showMessage('🌐 Back online', '#4ECDC4');
+            });
+
+            window.addEventListener('offline', function() {
+                isOnline = false;
+                updateSyncStatus();
+                showMessage('📱 Offline mode', '#FF9A42');
+            });
+
+            // Auto-save when page is about to close
+            window.addEventListener('beforeunload', function() {
+                if (players.length > 0) {
+                    savePlayers();
+                }
             });
 
             // Update sync status periodically
@@ -171,114 +414,287 @@
             const name = playerInput.value.trim();
             
             if (name === '') {
-                alert('Indtast et navn');
+                showMessage('⚠️ Indtast et spillernavn', '#FF9A42');
+                playerInput.focus();
+                return;
+            }
+            
+            if (name.length < 2) {
+                showMessage('⚠️ Navnet skal være mindst 2 tegn', '#FF9A42');
+                playerInput.focus();
                 return;
             }
             
             if (players.some(player => player.name.toLowerCase() === name.toLowerCase())) {
-                alert('Spilleren findes allerede');
+                showMessage('⚠️ Spilleren findes allerede', '#FF9A42');
+                playerInput.focus();
+                playerInput.select();
                 return;
             }
             
             const newPlayer = {
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                name: name
+                id: generatePlayerId(),
+                name: name,
+                addedAt: Date.now()
             };
             
             players.push(newPlayer);
             console.log('➕ Added player:', newPlayer);
             
             playerInput.value = '';
+            playerInput.classList.remove('error');
             addPlayerBtn.disabled = true;
             
             savePlayers();
             updateUI();
-            showMessage(`${name} tilføjet!`, '#4ECDC4');
+            showMessage(`✅ ${name} tilføjet!`, '#4ECDC4');
+            
+            // Focus back to input for quick adding
+            playerInput.focus();
         }
 
         function removePlayer(playerId) {
             const player = players.find(p => p.id === playerId);
-            if (player && confirm(`Fjern ${player.name}?`)) {
+            if (!player) return;
+            
+            if (confirm(`Fjern ${player.name} fra listen?`)) {
                 players = players.filter(p => p.id !== playerId);
                 savePlayers();
                 updateUI();
-                showMessage(`${player.name} fjernet`, '#FF9A42');
+                showMessage(`🗑️ ${player.name} fjernet`, '#FF9A42');
             }
         }
 
         function clearAllPlayers() {
             if (players.length === 0) return;
             
-            if (confirm(`Fjern alle ${players.length} spillere?`)) {
+            if (confirm(`Fjern alle ${players.length} spillere?\n\nDette kan ikke fortrydes.`)) {
                 players = [];
                 savePlayers();
                 updateUI();
-                showMessage('Alle spillere fjernet', '#FF9A42');
+                showMessage('🗑️ Alle spillere fjernet', '#FF9A42');
             }
+        }
+
+        function addDemoPlayers() {
+            const demoNames = [
+                'Anders', 'Birgitte', 'Christian', 'Dorte', 'Erik', 'Freja',
+                'Gustav', 'Hanne', 'Ivan', 'Janne', 'Klaus', 'Louise'
+            ];
+            
+            const newPlayers = demoNames
+                .filter(name => !players.some(p => p.name.toLowerCase() === name.toLowerCase()))
+                .slice(0, 8)
+                .map(name => ({
+                    id: generatePlayerId(),
+                    name: name,
+                    addedAt: Date.now()
+                }));
+            
+            if (newPlayers.length === 0) {
+                showMessage('⚠️ Demo spillere er allerede tilføjet', '#FF9A42');
+                return;
+            }
+            
+            players.push(...newPlayers);
+            savePlayers();
+            updateUI();
+            showMessage(`✅ ${newPlayers.length} demo spillere tilføjet`, '#4ECDC4');
+        }
+
+        function openImportModal() {
+            importModal.classList.add('active');
+            importTextarea.focus();
+        }
+
+        function closeImportModal() {
+            importModal.classList.remove('active');
+            importTextarea.value = '';
+            importPreview.style.display = 'none';
+            confirmImportBtn.disabled = true;
+        }
+
+        function updateImportPreview() {
+            const text = importTextarea.value.trim();
+            if (!text) {
+                importPreview.style.display = 'none';
+                confirmImportBtn.disabled = true;
+                return;
+            }
+            
+            const names = text.split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0)
+                .filter(name => !players.some(p => p.name.toLowerCase() === name.toLowerCase()));
+            
+            if (names.length === 0) {
+                importPreview.style.display = 'none';
+                confirmImportBtn.disabled = true;
+                return;
+            }
+            
+            previewList.innerHTML = names.map(name => `
+                <div class="preview-item">${escapeHtml(name)}</div>
+            `).join('');
+            
+            importPreview.style.display = 'block';
+            confirmImportBtn.disabled = false;
+            confirmImportBtn.textContent = `Importer ${names.length} spillere`;
+        }
+
+        function confirmImport() {
+            const text = importTextarea.value.trim();
+            const names = text.split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0)
+                .filter(name => !players.some(p => p.name.toLowerCase() === name.toLowerCase()));
+            
+            if (names.length === 0) return;
+            
+            const newPlayers = names.map(name => ({
+                id: generatePlayerId(),
+                name: name,
+                addedAt: Date.now()
+            }));
+            
+            players.push(...newPlayers);
+            savePlayers();
+            updateUI();
+            closeImportModal();
+            showMessage(`✅ ${newPlayers.length} spillere importeret`, '#4ECDC4');
         }
 
         function updateUI() {
             updatePlayersList();
             updatePlayerCount();
             updateContinueButton();
+            updateQuickActions();
+            updateStats();
+            updateRequirementStatus();
         }
 
         function updatePlayersList() {
             if (players.length === 0) {
-                playersList.innerHTML = '<p class="empty-message">Ingen spillere tilføjet endnu</p>';
+                playersList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h3>Ingen spillere tilføjet endnu</h3>
+                        <p>Tilføj spillere for at starte turneringen</p>
+                    </div>
+                `;
+                clearAllBtn.style.display = 'none';
                 return;
             }
             
-            playersList.innerHTML = players.map(player => `
-                <div class="player-item">
-                    <span class="player-name">${escapeHtml(player.name)}</span>
-                    <button class="remove-btn" onclick="removePlayer('${player.id}')">×</button>
+            // Sort players by when they were added (newest first)
+            const sortedPlayers = [...players].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+            
+            playersList.innerHTML = sortedPlayers.map((player, index) => `
+                <div class="player-item" style="animation-delay: ${index * 0.05}s">
+                    <div class="player-info">
+                        <div class="player-avatar">${getPlayerInitials(player.name)}</div>
+                        <div class="player-details">
+                            <span class="player-name">${escapeHtml(player.name)}</span>
+                            <span class="player-meta">Tilføjet ${getTimeAgo(player.addedAt)}</span>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removePlayer('${player.id}')" title="Fjern ${escapeHtml(player.name)}">
+                        <span class="remove-icon">×</span>
+                    </button>
                 </div>
             `).join('');
+            
+            clearAllBtn.style.display = 'inline-flex';
         }
 
         function updatePlayerCount() {
             playerCount.textContent = players.length;
+            
+            // Animate count change
+            playerCount.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                playerCount.style.transform = 'scale(1)';
+            }, 200);
         }
 
         function updateContinueButton() {
-            if (players.length >= 3) {
+            const hasEnoughPlayers = players.length >= 3;
+            
+            if (hasEnoughPlayers) {
                 continueBtn.classList.remove('disabled');
                 continueBtn.style.pointerEvents = 'auto';
+                continueBtn.setAttribute('aria-disabled', 'false');
             } else {
                 continueBtn.classList.add('disabled');
                 continueBtn.style.pointerEvents = 'none';
+                continueBtn.setAttribute('aria-disabled', 'true');
+            }
+        }
+
+        function updateQuickActions() {
+            if (players.length === 0) {
+                quickActionsSection.style.display = 'block';
+            } else {
+                quickActionsSection.style.display = 'none';
+            }
+        }
+
+        function updateStats() {
+            if (players.length >= 3) {
+                statsSection.style.display = 'block';
+                
+                const teamCount = Math.min(3, Math.max(2, Math.ceil(players.length / 3)));
+                const avgPerTeam = Math.round(players.length / teamCount * 10) / 10;
+                
+                totalPlayers.textContent = players.length;
+                estimatedTeams.textContent = teamCount;
+                avgPlayersPerTeam.textContent = avgPerTeam;
+            } else {
+                statsSection.style.display = 'none';
+            }
+        }
+
+        function updateRequirementStatus() {
+            const hasEnoughPlayers = players.length >= 3;
+            
+            if (hasEnoughPlayers) {
+                minPlayersReq.classList.add('completed');
+                minPlayersReq.querySelector('.req-icon').textContent = '✅';
+                minPlayersReq.querySelector('.req-status').textContent = `${players.length}/3`;
+            } else {
+                minPlayersReq.classList.remove('completed');
+                minPlayersReq.querySelector('.req-icon').textContent = '⭕';
+                minPlayersReq.querySelector('.req-status').textContent = `${players.length}/3`;
             }
         }
 
         function updateSyncStatus() {
+            if (!syncInitialized) {
+                statusIndicator.textContent = '🔄';
+                statusText.textContent = 'Initializing...';
+                syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
+                return;
+            }
+
             if (window.syncManager) {
                 const status = window.syncManager.getStatus();
                 
-                if (!status.initialized) {
-                    statusIndicator.textContent = '🔄';
-                    statusText.textContent = 'Connecting...';
-                    syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
-                } else if (!status.hasSupabase) {
+                if (!status.hasSupabase) {
                     statusIndicator.textContent = '📱';
                     statusText.textContent = 'Local only';
                     syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
-                } else if (!status.online) {
+                } else if (!isOnline) {
                     statusIndicator.textContent = '📱';
                     statusText.textContent = 'Offline';
                     syncStatus.style.background = 'rgba(255, 154, 66, 0.3)';
                 } else if (status.pendingSync > 0) {
                     statusIndicator.textContent = '⏳';
-                    statusText.textContent = `Syncing ${status.pendingSync}...`;
+                    statusText.textContent = `Syncing...`;
                     syncStatus.style.background = 'rgba(69, 183, 209, 0.3)';
-                } else if (status.hasSupabase && status.online) {
+                } else {
                     statusIndicator.textContent = '☁️';
                     statusText.textContent = 'Synced';
                     syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
-                } else {
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Local only';
-                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
                 }
             } else {
                 statusIndicator.textContent = '📱';
@@ -287,13 +703,33 @@
             }
         }
 
+        function showWelcomeMessage() {
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'welcome-message';
+            welcomeDiv.innerHTML = `
+                <div class="welcome-content">
+                    <h3>🏈 Velkommen til Håndæg og Håndbajere!</h3>
+                    <p>Start med at tilføje spillere til din turnering.</p>
+                    <button onclick="this.parentElement.parentElement.remove()" class="welcome-btn">
+                        Kom i gang
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(welcomeDiv);
+            
+            setTimeout(() => {
+                if (welcomeDiv.parentNode) {
+                    welcomeDiv.remove();
+                }
+            }, 8000);
+        }
+
         function showMessage(message, color) {
-            // Remove existing message
-            const existingMessage = document.querySelector('.message');
+            const existingMessage = document.querySelector('.toast-message');
             if (existingMessage) existingMessage.remove();
             
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
+            messageDiv.className = 'toast-message';
             messageDiv.style.cssText = `
                 position: fixed;
                 top: 20px;
@@ -303,12 +739,14 @@
                 color: white;
                 padding: 12px 20px;
                 border-radius: 8px;
-                z-index: 1000;
+                z-index: 2000;
                 animation: slideDown 0.3s ease;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                 font-weight: 500;
                 backdrop-filter: blur(10px);
                 border: 1px solid rgba(255,255,255,0.1);
+                max-width: 90vw;
+                text-align: center;
             `;
             messageDiv.textContent = message;
             document.body.appendChild(messageDiv);
@@ -321,16 +759,43 @@
             }, 3000);
         }
 
+        // Utility functions
+        function generatePlayerId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function getPlayerInitials(name) {
+            return name.split(' ')
+                .map(word => word.charAt(0).toUpperCase())
+                .slice(0, 2)
+                .join('');
+        }
+
+        function getTimeAgo(timestamp) {
+            if (!timestamp) return 'for et øjeblik siden';
+            
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (days > 0) return `${days} dag${days > 1 ? 'e' : ''} siden`;
+            if (hours > 0) return `${hours} time${hours > 1 ? 'r' : ''} siden`;
+            if (minutes > 0) return `${minutes} minut${minutes > 1 ? 'ter' : ''} siden`;
+            return 'for et øjeblik siden';
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // Add animations (fixed to prevent conflicts)
-        if (!document.getElementById('bakken-animations')) {
+        // Add animations
+        if (!document.getElementById('players-animations')) {
             const animationStyle = document.createElement('style');
-            animationStyle.id = 'bakken-animations';
+            animationStyle.id = 'players-animations';
             animationStyle.textContent = `
                 @keyframes slideDown {
                     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
@@ -342,59 +807,92 @@
                     to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
                 }
                 
-                @keyframes slideInRight {
-                    from { opacity: 0; transform: translateX(100px); }
+                @keyframes slideInLeft {
+                    from { opacity: 0; transform: translateX(-20px); }
                     to { opacity: 1; transform: translateX(0); }
+                }
+                
+                .player-item {
+                    animation: slideInLeft 0.3s ease forwards;
+                }
+                
+                .welcome-message {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 3000;
+                    animation: fadeIn 0.3s ease;
+                }
+                
+                .welcome-content {
+                    background: white;
+                    padding: 30px;
+                    border-radius: 15px;
+                    text-align: center;
+                    max-width: 400px;
+                    margin: 20px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                }
+                
+                .welcome-content h3 {
+                    color: #333;
+                    margin-bottom: 15px;
+                    font-size: 1.3rem;
+                }
+                
+                .welcome-content p {
+                    color: #666;
+                    margin-bottom: 20px;
+                    line-height: 1.5;
+                }
+                
+                .welcome-btn {
+                    background: #FFB366;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .welcome-btn:hover {
+                    background: #FF9A42;
+                    transform: translateY(-2px);
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
                 }
             `;
             document.head.appendChild(animationStyle);
         }
 
-        // Debug function for testing
-        window.debugSync = function() {
-            console.log('🔍 Debug Sync Status:');
-            if (window.syncManager) {
-                console.log('Sync Manager:', window.syncManager.getStatus());
-                console.log('Tournament ID:', window.syncManager.tournamentId);
-                console.log('Supabase Client:', !!window.syncManager.supabase);
-            } else {
-                console.log('❌ Sync Manager not available');
-            }
+        // Debug functions
+        window.debugPlayers = function() {
+            console.log('🔍 Debug Players Data:');
             console.log('Players:', players);
-            console.log('Local Storage:', {
-                players: localStorage.getItem('bakken-players'),
-                tournamentId: localStorage.getItem('bakken-tournament-id')
-            });
+            console.log('Sync Initialized:', syncInitialized);
+            console.log('Is Online:', isOnline);
+            console.log('Local Storage:', localStorage.getItem('bakken-players'));
+            if (window.syncManager) {
+                console.log('Sync Status:', window.syncManager.getStatus());
+            }
         };
 
-        // Auto-save when page is about to close
-        window.addEventListener('beforeunload', function() {
-            if (players.length > 0) {
-                savePlayers();
+        window.resetApp = function() {
+            if (confirm('Reset entire app? This will delete all data.')) {
+                localStorage.clear();
+                location.reload();
             }
-        });
-
-        // Handle visibility change (mobile app switching)
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') {
-                // Page became visible again, check for updates
-                if (window.syncManager && window.syncManager.isInitialized) {
-                    updateSyncStatus();
-                }
-            }
-        });
-
-        // Test real-time sync function
-        window.testSync = function() {
-            console.log('🧪 Testing sync...');
-            const testPlayer = {
-                id: 'test-' + Date.now(),
-                name: 'Test Player ' + Math.floor(Math.random() * 100)
-            };
-            players.push(testPlayer);
-            savePlayers();
-            updateUI();
-            console.log('✅ Test player added:', testPlayer);
         };
     </script>
 </body>
