@@ -5,557 +5,528 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Håndæg og Håndbajere - Spil</title>
     <link rel="stylesheet" href="games-styles.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="sync-manager.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="app-header">
-            <h1 class="app-title">Håndæg og Håndbajere</h1>
-            <p class="app-subtitle">Spil og Point</p>
+            <h1 class="app-title">🏈 Håndæg og Håndbajere</h1>
+            <p class="app-subtitle">Spil & Resultater</p>
+            <div class="sync-status" id="syncStatus">
+                <span class="status-indicator" id="statusIndicator">🔄</span>
+                <span class="status-text" id="statusText">Connecting...</span>
+            </div>
         </header>
 
         <!-- Navigation -->
         <section class="navigation-section">
-            <a href="simple-teams.html" class="nav-btn secondary">
-                ← Tilbage til Hold
-            </a>
-            <a href="photos.html" class="nav-btn primary">
-                Næste: Fotos →
-            </a>
+            <a href="simple-teams.html" class="nav-btn">← Tilbage til Hold</a>
+            <a href="photos.html" class="nav-btn primary">📸 Billeder</a>
         </section>
 
-        <!-- Game Selection View -->
-        <div id="gameSelectionView" class="game-view">
-            <!-- Standings -->
+        <!-- Game Views -->
+        <div class="game-view" id="gameView">
+            <!-- Standings Section -->
             <section class="standings-section">
-                <h2 class="section-title">🏆 Stillinger</h2>
-                <div id="standingsGrid" class="standings-grid">
-                    <!-- Standings will be populated here -->
+                <h2 class="section-title">🏆 Stilling</h2>
+                <div class="standings-grid" id="standingsGrid">
+                    <!-- Standings will be generated here -->
                 </div>
             </section>
 
-            <!-- Add New Game -->
-            <section class="add-game-section">
-                <h2 class="section-title">➕ Tilføj Nyt Spil</h2>
+            <!-- Add Game Section -->
+            <section class="add-game-section" id="addGameSection">
                 <div class="add-game-card">
-                    <div class="input-group">
-                        <input type="text" id="gameNameInput" placeholder="Indtast spilnavn (f.eks. Andedammen, Dart, Golf)" maxlength="30">
-                        <button id="addGameBtn" class="add-game-btn">
-                            🎯 Tilføj Spil
-                        </button>
+                    <h3 class="section-title">➕ Tilføj Spil Resultat</h3>
+                    <div class="input-group" id="gameInputs">
+                        <!-- Game inputs will be generated here -->
                     </div>
-                    <p class="add-game-hint">Tilføj et spil og tildel placeringer til holdene</p>
+                    <button id="addGameBtn" class="add-game-btn" disabled>
+                        Tilføj Resultat
+                    </button>
+                    <p class="add-game-hint">Indtast placeringer for alle hold</p>
                 </div>
             </section>
 
-            <!-- Completed Games -->
+            <!-- Completed Games Section -->
             <section class="completed-section">
-                <h3 class="section-title">
-                    ✅ Gennemførte Spil
+                <h2 class="section-title">
+                    Afsluttede Spil 
                     <span class="completed-badge" id="completedCount">0</span>
-                </h3>
-                <div id="completedGames" class="completed-games">
-                    <p class="no-games">Ingen spil gennemført endnu</p>
+                </h2>
+                <div class="completed-games" id="completedGames">
+                    <p class="no-games">Ingen spil afsluttet endnu</p>
                 </div>
             </section>
 
-            <!-- Finish Tournament -->
+            <!-- Finish Section -->
             <section class="finish-section">
-                <button id="finishTournamentBtn" class="finish-btn" disabled>
-                    🏆 Afslut Konkurrence
+                <button id="finishBtn" class="finish-btn" disabled>
+                    🏁 Afslut Turnering
                 </button>
-                <p class="finish-hint">Gennemfør mindst 5 spil for at afslutte</p>
+                <p class="finish-hint">Spil mindst 3 spil for at afslutte</p>
             </section>
         </div>
 
         <!-- Active Game View -->
-        <div id="activeGameView" class="game-view" style="display: none;">
-            <section class="active-game-section">
-                <h2 class="game-title" id="currentGameName">Spil Navn</h2>
+        <div class="active-game-section" id="activeGameView" style="display: none;">
+            <h2 class="game-title" id="gameTitle">Spil Resultat</h2>
+            
+            <div class="winner-selection">
+                <h3>Vælg placeringer:</h3>
                 
-                <div class="winner-selection">
-                    <h3>Vælg placeringer:</h3>
-                    
-                    <!-- 1st Place -->
-                    <div class="winner-card" data-place="1">
-                        <div class="place-header">
-                            <span class="place-medal">🥇</span>
-                            <h4>1. Plads (2 point)</h4>
-                        </div>
-                        <div class="team-buttons">
-                            <button class="team-btn" data-team="1">Hold 1</button>
-                            <button class="team-btn" data-team="2">Hold 2</button>
-                            <button class="team-btn" data-team="3">Hold 3</button>
-                        </div>
+                <div class="winner-card">
+                    <div class="place-header">
+                        <span class="place-medal">🥇</span>
+                        <h4>1. Plads (3 point)</h4>
                     </div>
-
-                    <!-- 2nd Place -->
-                    <div class="winner-card" data-place="2">
-                        <div class="place-header">
-                            <span class="place-medal">🥈</span>
-                            <h4>2. Plads (1 point)</h4>
-                        </div>
-                        <div class="team-buttons">
-                            <button class="team-btn" data-team="1">Hold 1</button>
-                            <button class="team-btn" data-team="2">Hold 2</button>
-                            <button class="team-btn" data-team="3">Hold 3</button>
-                        </div>
-                    </div>
-
-                    <!-- 3rd Place -->
-                    <div class="winner-card" data-place="3">
-                        <div class="place-header">
-                            <span class="place-medal">🥉</span>
-                            <h4>3. Plads (0 point)</h4>
-                        </div>
-                        <div class="team-buttons">
-                            <button class="team-btn" data-team="1">Hold 1</button>
-                            <button class="team-btn" data-team="2">Hold 2</button>
-                            <button class="team-btn" data-team="3">Hold 3</button>
-                        </div>
+                    <div class="team-buttons" id="firstPlaceButtons">
+                        <!-- Team buttons will be generated here -->
                     </div>
                 </div>
 
-                <div class="game-actions">
-                    <button id="cancelGameBtn" class="action-btn secondary">
-                        ❌ Annuller
-                    </button>
-                    <button id="confirmResultBtn" class="action-btn primary" disabled>
-                        ✅ Bekræft Resultat
-                    </button>
+                <div class="winner-card">
+                    <div class="place-header">
+                        <span class="place-medal">🥈</span>
+                        <h4>2. Plads (2 point)</h4>
+                    </div>
+                    <div class="team-buttons" id="secondPlaceButtons">
+                        <!-- Team buttons will be generated here -->
+                    </div>
                 </div>
-            </section>
+
+                <div class="winner-card">
+                    <div class="place-header">
+                        <span class="place-medal">🥉</span>
+                        <h4>3. Plads (1 point)</h4>
+                    </div>
+                    <div class="team-buttons" id="thirdPlaceButtons">
+                        <!-- Team buttons will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-actions">
+                <button id="saveGameBtn" class="action-btn primary" disabled>
+                    💾 Gem Resultat
+                </button>
+                <button id="cancelGameBtn" class="action-btn secondary">
+                    ❌ Annuller
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Custom game management system
-        let teams = {};
-        let players = [];
-        let completedGamesList = [];
+        // Games management with sync
+        let teams = [];
+        let games = [];
         let currentGame = null;
-        let gameResults = {}; // { place: teamId }
+        let gameCounter = 1;
 
         // DOM elements
-        const gameSelectionView = document.getElementById('gameSelectionView');
-        const activeGameView = document.getElementById('activeGameView');
         const standingsGrid = document.getElementById('standingsGrid');
-        const currentGameName = document.getElementById('currentGameName');
-        const confirmResultBtn = document.getElementById('confirmResultBtn');
-        const cancelGameBtn = document.getElementById('cancelGameBtn');
-        const completedGamesContainer = document.getElementById('completedGames');
-        const completedCount = document.getElementById('completedCount');
-        const finishTournamentBtn = document.getElementById('finishTournamentBtn');
-        const gameNameInput = document.getElementById('gameNameInput');
+        const gameInputs = document.getElementById('gameInputs');
         const addGameBtn = document.getElementById('addGameBtn');
+        const completedGames = document.getElementById('completedGames');
+        const completedCount = document.getElementById('completedCount');
+        const finishBtn = document.getElementById('finishBtn');
+        const gameView = document.getElementById('gameView');
+        const activeGameView = document.getElementById('activeGameView');
+        const gameTitle = document.getElementById('gameTitle');
+        const firstPlaceButtons = document.getElementById('firstPlaceButtons');
+        const secondPlaceButtons = document.getElementById('secondPlaceButtons');
+        const thirdPlaceButtons = document.getElementById('thirdPlaceButtons');
+        const saveGameBtn = document.getElementById('saveGameBtn');
+        const cancelGameBtn = document.getElementById('cancelGameBtn');
+        const syncStatus = document.getElementById('syncStatus');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎯 Custom Games page loaded');
-            loadRealData();
-            renderStandings();
+            console.log('🚀 Games page starting...');
+            loadData();
             setupEventListeners();
-            updateCompletedGames();
-            updateFinishButton();
+            updateUI();
+            updateSyncStatus();
+            
+            // Initialize sync
+            setTimeout(() => {
+                if (window.syncManager) {
+                    window.syncManager.initialize().then(() => {
+                        console.log('✅ Sync manager initialized');
+                        loadData(); // Reload in case cloud data was merged
+                        updateUI();
+                        updateSyncStatus();
+                    }).catch(error => {
+                        console.error('❌ Sync initialization failed:', error);
+                        updateSyncStatus();
+                    });
+                }
+            }, 1000);
         });
 
-        function loadRealData() {
-            console.log('📥 Loading real data for games...');
-            
-            // Load players
+        function loadData() {
             try {
-                const playersData = localStorage.getItem('bakken-players');
-                if (playersData) {
-                    players = JSON.parse(playersData);
-                    console.log('✅ Loaded players for games:', players);
-                }
-            } catch (e) {
-                console.error('❌ Failed to load players:', e);
-                players = [];
-            }
-
-            // Load teams
-            try {
+                // Load teams
                 const teamsData = localStorage.getItem('bakken-teams');
                 if (teamsData) {
-                    const teamInfo = JSON.parse(teamsData);
-                    const teamAssignments = teamInfo.teams || {};
-                    const teamNames = teamInfo.teamNames || {};
-                    
-                    // Convert to format games expects
-                    teams = {};
-                    [1, 2, 3].forEach(teamId => {
-                        const playerIds = teamAssignments[teamId] || [];
-                        const teamMembers = playerIds.map(playerId => {
-                            const player = players.find(p => p.id === playerId);
-                            return player ? player.name : 'Unknown';
-                        }).filter(name => name !== 'Unknown');
-                        
-                        teams[teamId] = {
-                            name: teamNames[teamId] || `Hold ${teamId}`,
-                            members: teamMembers,
-                            score: 0
-                        };
-                    });
-                    
-                    console.log('✅ Loaded teams for games:', teams);
+                    const savedData = JSON.parse(teamsData);
+                    teams = savedData.teams || [];
+                    console.log('📥 Loaded teams:', teams);
                 }
-            } catch (e) {
-                console.error('❌ Failed to load teams:', e);
-                teams = {
-                    1: { name: 'Hold 1', members: [], score: 0 },
-                    2: { name: 'Hold 2', members: [], score: 0 },
-                    3: { name: 'Hold 3', members: [], score: 0 }
-                };
-            }
 
-            // Load completed games
-            try {
+                // Load games
                 const gamesData = localStorage.getItem('bakken-games');
                 if (gamesData) {
-                    const gameInfo = JSON.parse(gamesData);
-                    completedGamesList = gameInfo.completedGames || [];
-                    
-                    // Restore team scores
-                    if (gameInfo.teamScores) {
-                        Object.keys(gameInfo.teamScores).forEach(teamId => {
-                            if (teams[teamId]) {
-                                teams[teamId].score = gameInfo.teamScores[teamId];
-                            }
-                        });
-                    }
-                    
-                    console.log('✅ Loaded completed games:', completedGamesList);
+                    const savedData = JSON.parse(gamesData);
+                    games = savedData.games || [];
+                    gameCounter = savedData.gameCounter || 1;
+                    console.log('📥 Loaded games:', games);
+                }
+
+                // Redirect if no teams
+                if (teams.length === 0) {
+                    alert('Ingen hold fundet. Opret hold først.');
+                    window.location.href = 'simple-teams.html';
+                    return;
                 }
             } catch (e) {
-                console.error('❌ Failed to load games:', e);
-                completedGamesList = [];
+                console.error('❌ Load failed:', e);
+                alert('Fejl ved indlæsning af data. Gå tilbage til hold-siden.');
+                window.location.href = 'simple-teams.html';
             }
-
-            // Update team button labels with real names
-            updateTeamButtonLabels();
         }
 
-        function updateTeamButtonLabels() {
-            document.querySelectorAll('.team-btn').forEach(btn => {
-                const teamId = btn.dataset.team;
-                if (teams[teamId]) {
-                    btn.textContent = teams[teamId].name;
-                }
-            });
-        }
-
-        function saveGameData() {
+        function saveData() {
             try {
-                const teamScores = {};
-                Object.keys(teams).forEach(teamId => {
-                    teamScores[teamId] = teams[teamId].score;
-                });
-                
-                const gameData = {
-                    completedGames: completedGamesList,
-                    teamScores: teamScores
+                const gamesData = {
+                    games: games,
+                    gameCounter: gameCounter,
+                    lastUpdated: Date.now()
                 };
                 
-                localStorage.setItem('bakken-games', JSON.stringify(gameData));
-                console.log('💾 Saved game data:', gameData);
+                localStorage.setItem('bakken-games', JSON.stringify(gamesData));
+                localStorage.setItem('bakken-games-last-update', Date.now().toString());
+                console.log('💾 Saved games data:', gamesData);
+                
+                // Sync to cloud
+                if (window.syncManager && window.syncManager.isInitialized) {
+                    window.syncManager.syncGames(gamesData);
+                } else {
+                    console.log('📝 Sync manager not ready, data saved locally only');
+                }
             } catch (e) {
-                console.error('❌ Failed to save game data:', e);
+                console.error('❌ Save failed:', e);
             }
         }
 
         function setupEventListeners() {
-            console.log('Setting up event listeners...');
-            
-            // Add game functionality
-            addGameBtn.addEventListener('click', addNewGame);
-            gameNameInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addNewGame();
+            addGameBtn.addEventListener('click', startNewGame);
+            finishBtn.addEventListener('click', finishTournament);
+            saveGameBtn.addEventListener('click', saveCurrentGame);
+            cancelGameBtn.addEventListener('click', cancelCurrentGame);
+
+            // Listen for remote data updates
+            window.addEventListener('bakken-data-updated', function(event) {
+                if (event.detail.table === 'games' && event.detail.source === 'remote') {
+                    console.log('🔄 Games updated from remote source');
+                    loadData();
+                    updateUI();
+                    showMessage('🔄 Games updated from another device', '#45B7D1');
                 }
             });
-            
-            gameNameInput.addEventListener('input', function() {
-                addGameBtn.disabled = this.value.trim().length === 0;
+
+            // Listen for data loaded from cloud
+            window.addEventListener('bakken-data-loaded', function() {
+                console.log('📥 Data loaded from cloud');
+                loadData();
+                updateUI();
             });
 
-            // Team selection for places
-            document.querySelectorAll('.team-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    console.log('Team button clicked:', this.dataset.team, this.closest('.winner-card').dataset.place);
-                    selectTeamForPlace(this.dataset.team, this.closest('.winner-card').dataset.place);
-                });
+            // Listen for sync status changes
+            window.addEventListener('sync-status-changed', function(event) {
+                console.log('📊 Sync status changed:', event.detail.status);
+                updateSyncStatus();
             });
 
-            // Game actions
-            confirmResultBtn.addEventListener('click', confirmGameResult);
-            cancelGameBtn.addEventListener('click', cancelGame);
-            
-            finishTournamentBtn.addEventListener('click', function() {
-                if (completedGamesList.length >= 5) {
-                    if (confirm('Er du sikker på at konkurrencen er færdig?')) {
-                        showMessage('Konkurrencen er afsluttet! Tillykke til vinderne! 🎉');
-                        finishTournamentBtn.textContent = '🏆 Konkurrence Afsluttet';
-                        finishTournamentBtn.disabled = true;
-                    }
-                }
-            });
+            // Update sync status periodically
+            setInterval(updateSyncStatus, 3000);
         }
 
-        function addNewGame() {
-            const gameName = gameNameInput.value.trim();
-            
-            if (gameName === '') {
-                showMessage('Indtast et spilnavn', '#FF5252');
-                return;
-            }
-            
-            // Check if game already exists
-            const existingGame = completedGamesList.find(game => {
-                const name = typeof game === 'string' ? game : game.name;
-                return name.toLowerCase() === gameName.toLowerCase();
-            });
-            
-            if (existingGame) {
-                showMessage('Dette spil er allerede gennemført', '#FF5252');
-                return;
-            }
-            
-            // Start the game
-            startGame(gameName);
-            gameNameInput.value = '';
-            addGameBtn.disabled = true;
-        }
-
-        function startGame(gameName) {
-            console.log('Starting custom game:', gameName);
-            currentGame = gameName;
-            gameResults = {};
-            
-            // Update UI
-            currentGameName.textContent = gameName;
-            gameSelectionView.style.display = 'none';
-            activeGameView.style.display = 'block';
-            
-            // Reset team selections
-            document.querySelectorAll('.team-btn').forEach(btn => {
-                btn.classList.remove('selected');
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            });
-            document.querySelectorAll('.winner-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            updateConfirmButton();
-        }
-
-        function selectTeamForPlace(teamId, place) {
-            console.log('Selecting team', teamId, 'for place', place);
-            
-            // Remove this team from other places
-            Object.keys(gameResults).forEach(p => {
-                if (gameResults[p] === teamId) {
-                    delete gameResults[p];
-                }
-            });
-            
-            // Add team to this place
-            gameResults[place] = teamId;
-            
-            // Update UI
-            updateTeamButtonStates();
-            updateConfirmButton();
-        }
-
-        function updateTeamButtonStates() {
-            // Reset all buttons
-            document.querySelectorAll('.team-btn').forEach(btn => {
-                btn.classList.remove('selected');
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            });
-            
-            document.querySelectorAll('.winner-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Update based on current selections
-            Object.entries(gameResults).forEach(([place, teamId]) => {
-                const card = document.querySelector(`[data-place="${place}"]`);
-                const btn = card?.querySelector(`[data-team="${teamId}"]`);
-                
-                if (btn) {
-                    btn.classList.add('selected');
-                    card.classList.add('selected');
-                }
-                
-                // Disable this team in other places
-                document.querySelectorAll(`[data-team="${teamId}"]:not(.selected)`).forEach(otherBtn => {
-                    otherBtn.disabled = true;
-                    otherBtn.style.opacity = '0.5';
-                });
-            });
-        }
-
-        function updateConfirmButton() {
-            const allPlacesSelected = Object.keys(gameResults).length === 3;
-            confirmResultBtn.disabled = !allPlacesSelected;
-        }
-
-        function confirmGameResult() {
-            if (Object.keys(gameResults).length !== 3) return;
-            
-            // Award points: 1st = 2 points, 2nd = 1 point, 3rd = 0 points
-            const points = { 1: 2, 2: 1, 3: 0 };
-            
-            Object.entries(gameResults).forEach(([place, teamId]) => {
-                teams[teamId].score += points[place];
-            });
-            
-            // Record completed game
-            completedGamesList.push({
-                name: currentGame,
-                results: { ...gameResults },
-                timestamp: new Date().toISOString()
-            });
-            
-            // Save data
-            saveGameData();
-            
-            // Update UI
-            renderStandings();
+        function updateUI() {
+            updateStandings();
+            updateGameInputs();
             updateCompletedGames();
             updateFinishButton();
-            
-            // Return to game selection
-            activeGameView.style.display = 'none';
-            gameSelectionView.style.display = 'block';
-            currentGame = null;
-            
-            // Show success message
-            const winner = teams[gameResults[1]];
-            showMessage(`${winner.name} vandt ${currentGame}! 🎉`);
         }
 
-        function cancelGame() {
-            activeGameView.style.display = 'none';
-            gameSelectionView.style.display = 'block';
-            currentGame = null;
-            gameResults = {};
-        }
+        function updateStandings() {
+            const standings = calculateStandings();
+            
+            if (standings.length === 0) {
+                standingsGrid.innerHTML = '<p class="no-games">Ingen resultater endnu</p>';
+                return;
+            }
 
-        function renderStandings() {
-            // Sort teams by score
-            const sortedTeams = Object.entries(teams)
-                .sort(([,a], [,b]) => b.score - a.score)
-                .map(([id, team], index) => ({
-                    id,
-                    ...team,
-                    position: index + 1
-                }));
-
-            standingsGrid.innerHTML = sortedTeams.map(team => `
-                <div class="team-standing ${getPositionClass(team.position)}">
-                    <div class="standing-position">${team.position}</div>
+            standingsGrid.innerHTML = standings.map((team, index) => `
+                <div class="team-standing ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}">
+                    <span class="standing-position">${index + 1}</span>
                     <div class="standing-info">
-                        <div class="standing-team">${team.name}</div>
-                        <div class="standing-members">${team.members.join(', ')}</div>
+                        <div class="standing-team">${escapeHtml(team.name)}</div>
+                        <div class="standing-members">${team.players.map(p => p.name).join(', ')}</div>
                     </div>
-                    <div class="standing-score">${team.score}</div>
+                    <span class="standing-score">${team.score}</span>
                 </div>
             `).join('');
         }
 
-        function getPositionClass(position) {
-            switch(position) {
-                case 1: return 'first';
-                case 2: return 'second';
-                case 3: return 'third';
-                default: return '';
+        function calculateStandings() {
+            const teamScores = teams.map(team => ({
+                ...team,
+                score: 0
+            }));
+
+            games.forEach(game => {
+                game.results.forEach(result => {
+                    const team = teamScores.find(t => t.id === result.teamId);
+                    if (team) {
+                        team.score += result.points;
+                    }
+                });
+            });
+
+            return teamScores.sort((a, b) => b.score - a.score);
+        }
+
+        function updateGameInputs() {
+            gameInputs.innerHTML = teams.map(team => `
+                <input type="number" 
+                       id="team${team.id}" 
+                       placeholder="${escapeHtml(team.name)} placering" 
+                       min="1" 
+                       max="${teams.length}"
+                       onchange="validateGameInputs()">
+            `).join('');
+        }
+
+        function validateGameInputs() {
+            const inputs = teams.map(team => {
+                const input = document.getElementById(`team${team.id}`);
+                return {
+                    teamId: team.id,
+                    teamName: team.name,
+                    placement: parseInt(input.value) || 0
+                };
+            });
+
+            const validPlacements = inputs.filter(input => input.placement > 0 && input.placement <= teams.length);
+            const uniquePlacements = new Set(validPlacements.map(input => input.placement));
+            
+            const isValid = validPlacements.length === teams.length && uniquePlacements.size === teams.length;
+            addGameBtn.disabled = !isValid;
+        }
+
+        function startNewGame() {
+            const inputs = teams.map(team => {
+                const input = document.getElementById(`team${team.id}`);
+                return {
+                    teamId: team.id,
+                    teamName: team.name,
+                    placement: parseInt(input.value)
+                };
+            });
+
+            currentGame = {
+                id: gameCounter,
+                name: `Spil ${gameCounter}`,
+                results: inputs.map(input => ({
+                    teamId: input.teamId,
+                    teamName: input.teamName,
+                    placement: input.placement,
+                    points: calculatePoints(input.placement, teams.length)
+                }))
+            };
+
+            gameTitle.textContent = `${currentGame.name} - Bekræft Resultat`;
+            updateActiveGameView();
+            showActiveGameView();
+        }
+
+        function calculatePoints(placement, totalTeams) {
+            return Math.max(1, totalTeams + 1 - placement);
+        }
+
+        function updateActiveGameView() {
+            if (!currentGame) return;
+
+            const sortedResults = [...currentGame.results].sort((a, b) => a.placement - b.placement);
+
+            // Update place buttons
+            updatePlaceButtons(firstPlaceButtons, sortedResults, 1);
+            updatePlaceButtons(secondPlaceButtons, sortedResults, 2);
+            updatePlaceButtons(thirdPlaceButtons, sortedResults, 3);
+
+            saveGameBtn.disabled = false;
+        }
+
+        function updatePlaceButtons(container, results, placement) {
+            const team = results.find(r => r.placement === placement);
+            if (team) {
+                container.innerHTML = `
+                    <button class="team-btn selected" disabled>
+                        ${escapeHtml(team.teamName)} (${team.points} point)
+                    </button>
+                `;
+            } else {
+                container.innerHTML = '<p>Ingen hold på denne plads</p>';
             }
+        }
+
+        function saveCurrentGame() {
+            if (!currentGame) return;
+
+            games.push(currentGame);
+            gameCounter++;
+            
+            // Clear inputs
+            teams.forEach(team => {
+                const input = document.getElementById(`team${team.id}`);
+                if (input) input.value = '';
+            });
+
+            saveData();
+            updateUI();
+            hideActiveGameView();
+            showMessage(`${currentGame.name} gemt!`, '#4ECDC4');
+            currentGame = null;
+        }
+
+        function cancelCurrentGame() {
+            currentGame = null;
+            hideActiveGameView();
+        }
+
+        function showActiveGameView() {
+            gameView.style.display = 'none';
+            activeGameView.style.display = 'block';
+        }
+
+        function hideActiveGameView() {
+            gameView.style.display = 'block';
+            activeGameView.style.display = 'none';
         }
 
         function updateCompletedGames() {
-            completedCount.textContent = completedGamesList.length;
-            
-            if (completedGamesList.length === 0) {
-                completedGamesContainer.innerHTML = '<p class="no-games">Ingen spil gennemført endnu</p>';
+            completedCount.textContent = games.length;
+
+            if (games.length === 0) {
+                completedGames.innerHTML = '<p class="no-games">Ingen spil afsluttet endnu</p>';
                 return;
             }
-            
-            completedGamesContainer.innerHTML = completedGamesList.map((game, index) => {
-                const gameData = typeof game === 'string' ? { name: game } : game;
-                
-                // Enhanced results display with all places
-                let resultText = 'Resultat gemt';
-                if (gameData.results) {
-                    const first = teams[gameData.results[1]]?.name || 'Unknown';
-                    const second = teams[gameData.results[2]]?.name || 'Unknown';
-                    const third = teams[gameData.results[3]]?.name || 'Unknown';
-                    
-                    resultText = `🥇 ${first} | 🥈 ${second} | 🥉 ${third}`;
-                }
-                
-                return `
-                    <div class="completed-game">
-                        <div class="completed-game-info">
-                            <div class="completed-game-name">${gameData.name}</div>
-                            <div class="completed-game-result">${resultText}</div>
+
+            completedGames.innerHTML = games.map(game => `
+                <div class="completed-game">
+                    <div class="completed-game-info">
+                        <div class="completed-game-name">${escapeHtml(game.name)}</div>
+                        <div class="completed-game-result">
+                            ${game.results.sort((a, b) => a.placement - b.placement)
+                                .map(r => `${r.placement}. ${r.teamName} (${r.points}p)`)
+                                .join(' • ')}
                         </div>
-                        <button class="delete-game-btn" onclick="deleteGame(${index})" title="Slet spil">
-                            🗑️
-                        </button>
                     </div>
-                `;
-            }).join('');
+                    <button class="delete-game-btn" onclick="deleteGame(${game.id})">🗑️</button>
+                </div>
+            `).join('');
         }
 
-        function deleteGame(gameIndex) {
-            if (confirm('Er du sikker på at du vil slette dette spil? Point vil blive trukket fra.')) {
-                const gameToDelete = completedGamesList[gameIndex];
-                
-                // Remove points from teams
-                if (gameToDelete.results) {
-                    const points = { 1: 2, 2: 1, 3: 0 };
-                    Object.entries(gameToDelete.results).forEach(([place, teamId]) => {
-                        if (teams[teamId]) {
-                            teams[teamId].score -= points[place];
-                            if (teams[teamId].score < 0) teams[teamId].score = 0;
-                        }
-                    });
-                }
-                
-                // Remove from list
-                completedGamesList.splice(gameIndex, 1);
-                
-                // Save and update
-                saveGameData();
-                renderStandings();
-                updateCompletedGames();
-                updateFinishButton();
-                
-                showMessage('Spil slettet og point justeret');
+        function deleteGame(gameId) {
+            const game = games.find(g => g.id === gameId);
+            if (game && confirm(`Slet ${game.name}?`)) {
+                games = games.filter(g => g.id !== gameId);
+                saveData();
+                updateUI();
+                showMessage(`${game.name} slettet`, '#FF9A42');
             }
         }
 
         function updateFinishButton() {
-            const minGames = 5;
-            finishTournamentBtn.disabled = completedGamesList.length < minGames;
-            
-            const finishHint = document.querySelector('.finish-hint');
-            if (completedGamesList.length >= minGames) {
-                finishHint.textContent = 'Klar til at afslutte konkurrencen!';
-                finishHint.style.color = '#4ECDC4';
+            if (games.length >= 3) {
+                finishBtn.disabled = false;
+                finishBtn.querySelector('.finish-hint').textContent = 'Klar til at afslutte!';
             } else {
-                const remaining = minGames - completedGamesList.length;
-                finishHint.textContent = `Gennemfør ${remaining} spil mere for at afslutte`;
-                finishHint.style.color = '#999';
+                finishBtn.disabled = true;
+                document.querySelector('.finish-hint').textContent = `Spil ${3 - games.length} flere spil for at afslutte`;
             }
         }
 
-        function showMessage(message, color = '#4ECDC4') {
+        function finishTournament() {
+            if (games.length < 3) {
+                alert('Spil mindst 3 spil før afslutning');
+                return;
+            }
+
+            const standings = calculateStandings();
+            const winner = standings[0];
+            
+            if (confirm(`Afslut turneringen?\n\nVinder: ${winner.name} (${winner.score} point)`)) {
+                alert(`🏆 Tillykke til ${winner.name}!\n\nFinal stilling:\n${standings.map((team, i) => `${i + 1}. ${team.name} - ${team.score} point`).join('\n')}`);
+                
+                // Could redirect to a results page or reset
+                if (confirm('Vil du starte en ny turnering?')) {
+                    if (confirm('Dette vil slette alle data. Er du sikker?')) {
+                        localStorage.clear();
+                        window.location.href = 'index.html';
+                    }
+                }
+            }
+        }
+
+        function updateSyncStatus() {
+            if (window.syncManager) {
+                const status = window.syncManager.getStatus();
+                
+                if (!status.initialized) {
+                    statusIndicator.textContent = '🔄';
+                    statusText.textContent = 'Connecting...';
+                    syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
+                } else if (!status.hasSupabase) {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Local only';
+                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+                } else if (!status.online) {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Offline';
+                    syncStatus.style.background = 'rgba(255, 154, 66, 0.3)';
+                } else if (status.pendingSync > 0) {
+                    statusIndicator.textContent = '⏳';
+                    statusText.textContent = `Syncing ${status.pendingSync}...`;
+                    syncStatus.style.background = 'rgba(69, 183, 209, 0.3)';
+                } else if (status.hasSupabase && status.online) {
+                    statusIndicator.textContent = '☁️';
+                    statusText.textContent = 'Synced';
+                    syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
+                } else {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Local only';
+                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+                }
+            } else {
+                statusIndicator.textContent = '📱';
+                statusText.textContent = 'Local only';
+                syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+            }
+        }
+
+        function showMessage(message, color) {
+            const existingMessage = document.querySelector('.message');
+            if (existingMessage) existingMessage.remove();
+            
             const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
             messageDiv.style.cssText = `
                 position: fixed;
                 top: 20px;
@@ -565,27 +536,54 @@
                 color: white;
                 padding: 12px 20px;
                 border-radius: 8px;
-                z-index: 3000;
+                z-index: 1000;
                 animation: slideDown 0.3s ease;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                font-weight: 500;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.1);
             `;
             messageDiv.textContent = message;
             document.body.appendChild(messageDiv);
             
             setTimeout(() => {
-                if (messageDiv.parentNode) messageDiv.remove();
+                if (messageDiv.parentNode) {
+                    messageDiv.style.animation = 'slideUp 0.3s ease forwards';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
             }, 3000);
         }
 
-        // Add animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideDown {
-                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add animations
+        if (!document.getElementById('games-animations')) {
+            const animationStyle = document.createElement('style');
+            animationStyle.id = 'games-animations';
+            animationStyle.textContent = `
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                }
+                
+                @keyframes slideUp {
+                    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                }
+            `;
+            document.head.appendChild(animationStyle);
+        }
+
+        // Auto-save when page is about to close
+        window.addEventListener('beforeunload', function() {
+            if (games.length > 0) {
+                saveData();
             }
-        `;
-        document.head.appendChild(style);
+        });
     </script>
 </body>
 </html>
