@@ -161,10 +161,12 @@
     </div>
 
     <script>
-        // Enhanced player management system
+        // Enhanced player management system with guaranteed data transfer
         let players = [];
         let syncInitialized = false;
         let isOnline = navigator.onLine;
+        let dataTransferAttempts = 0;
+        const maxTransferAttempts = 3;
 
         // DOM elements
         const playerInput = document.getElementById('playerInput');
@@ -195,13 +197,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Bakken Players App Starting...');
             
-            // Load existing data
+            // Load existing data first
             loadPlayers();
             
             // Setup event listeners
             setupEventListeners();
             
-            // Update UI
+            // Update UI immediately
             updateUI();
             updateSyncStatus();
             
@@ -267,7 +269,7 @@
                         !cloudPlayers.every(cp => players.find(p => p.id === cp.id && p.name === cp.name))) {
                         
                         players = cloudPlayers;
-                        savePlayersLocally();
+                        savePlayersWithRetry();
                         updateUI();
                         
                         console.log('✅ Loaded players from cloud:', players.length);
@@ -283,16 +285,16 @@
             try {
                 const data = localStorage.getItem('bakken-players');
                 if (data) {
-                    players = JSON.parse(data);
-                    // Ensure all players have required fields
-                    players = players.map(player => ({
+                    const parsedPlayers = JSON.parse(data);
+                    // Ensure all players have required fields and clean format
+                    players = parsedPlayers.map(player => ({
                         id: player.id || generatePlayerId(),
-                        name: player.name || 'Unnamed Player',
-                        addedAt: player.addedAt || Date.now()
+                        name: player.name || 'Unnamed Player'
                     }));
-                    console.log('📥 Loaded players from localStorage:', players.length);
+                    console.log('📥 Loaded players from localStorage:', players.length, players);
                 } else {
                     players = [];
+                    console.log('📥 No players found in localStorage');
                 }
             } catch (e) {
                 console.error('❌ Error loading players:', e);
@@ -301,24 +303,64 @@
             }
         }
 
-        function savePlayersLocally() {
-            try {
-                localStorage.setItem('bakken-players', JSON.stringify(players));
-                localStorage.setItem('bakken-players-last-update', Date.now().toString());
-            } catch (e) {
-                console.error('❌ Error saving players locally:', e);
-                showMessage('⚠️ Error saving players locally', '#FF6B6B');
+        function savePlayersWithRetry() {
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            function attemptSave() {
+                try {
+                    // Clean player data before saving
+                    const cleanPlayers = players.map(player => ({
+                        id: player.id,
+                        name: player.name
+                    }));
+                    
+                    localStorage.setItem('bakken-players', JSON.stringify(cleanPlayers));
+                    localStorage.setItem('bakken-players-last-update', Date.now().toString());
+                    
+                    console.log('💾 Players saved successfully:', cleanPlayers.length, cleanPlayers);
+                    
+                    // Verify the save worked
+                    const verification = localStorage.getItem('bakken-players');
+                    if (verification) {
+                        const verifiedData = JSON.parse(verification);
+                        if (verifiedData.length === cleanPlayers.length) {
+                            console.log('✅ Save verification successful');
+                            return true;
+                        }
+                    }
+                    throw new Error('Save verification failed');
+                    
+                } catch (e) {
+                    attempts++;
+                    console.error(`❌ Save attempt ${attempts} failed:`, e);
+                    
+                    if (attempts < maxAttempts) {
+                        setTimeout(attemptSave, 100 * attempts);
+                    } else {
+                        showMessage('⚠️ Error saving players - please try again', '#FF6B6B');
+                    }
+                    return false;
+                }
             }
+            
+            return attemptSave();
         }
 
         function savePlayers() {
-            // Save locally first
-            savePlayersLocally();
+            // Save locally with retry mechanism
+            if (!savePlayersWithRetry()) {
+                return;
+            }
             
             // Sync to cloud if available
             if (window.syncManager && syncInitialized) {
                 try {
-                    window.syncManager.syncPlayers(players);
+                    const cleanPlayers = players.map(player => ({
+                        id: player.id,
+                        name: player.name
+                    }));
+                    window.syncManager.syncPlayers(cleanPlayers);
                     console.log('☁️ Players synced to cloud');
                 } catch (error) {
                     console.error('❌ Cloud sync failed:', error);
@@ -365,6 +407,29 @@
             // Import modal events
             importTextarea.addEventListener('input', updateImportPreview);
 
+            // Continue button with data verification
+            continueBtn.addEventListener('click', function(e) {
+                if (players.length < 3) {
+                    e.preventDefault();
+                    showMessage('⚠️ Minimum 3 spillere krævet', '#FF9A42');
+                    return;
+                }
+                
+                // Force save before navigation
+                if (!savePlayersWithRetry()) {
+                    e.preventDefault();
+                    showMessage('⚠️ Fejl ved gemning - prøv igen', '#FF6B6B');
+                    return;
+                }
+                
+                // Add a small delay to ensure save completes
+                e.preventDefault();
+                showMessage('✅ Spillere gemt - går til hold-siden...', '#4ECDC4');
+                setTimeout(() => {
+                    window.location.href = 'simple-teams.html';
+                }, 500);
+            });
+
             // Sync event listeners
             window.addEventListener('bakken-data-updated', function(event) {
                 if (event.detail.table === 'players' && event.detail.source === 'remote') {
@@ -402,7 +467,14 @@
             // Auto-save when page is about to close
             window.addEventListener('beforeunload', function() {
                 if (players.length > 0) {
-                    savePlayers();
+                    savePlayersWithRetry();
+                }
+            });
+
+            // Save when page becomes hidden (mobile app switching)
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden' && players.length > 0) {
+                    savePlayersWithRetry();
                 }
             });
 
@@ -434,12 +506,12 @@
             
             const newPlayer = {
                 id: generatePlayerId(),
-                name: name,
-                addedAt: Date.now()
+                name: name
             };
             
             players.push(newPlayer);
             console.log('➕ Added player:', newPlayer);
+            console.log('📊 Total players now:', players.length);
             
             playerInput.value = '';
             playerInput.classList.remove('error');
@@ -459,6 +531,9 @@
             
             if (confirm(`Fjern ${player.name} fra listen?`)) {
                 players = players.filter(p => p.id !== playerId);
+                console.log('🗑️ Removed player:', player);
+                console.log('📊 Total players now:', players.length);
+                
                 savePlayers();
                 updateUI();
                 showMessage(`🗑️ ${player.name} fjernet`, '#FF9A42');
@@ -470,6 +545,8 @@
             
             if (confirm(`Fjern alle ${players.length} spillere?\n\nDette kan ikke fortrydes.`)) {
                 players = [];
+                console.log('🗑️ All players cleared');
+                
                 savePlayers();
                 updateUI();
                 showMessage('🗑️ Alle spillere fjernet', '#FF9A42');
@@ -487,8 +564,7 @@
                 .slice(0, 8)
                 .map(name => ({
                     id: generatePlayerId(),
-                    name: name,
-                    addedAt: Date.now()
+                    name: name
                 }));
             
             if (newPlayers.length === 0) {
@@ -497,6 +573,9 @@
             }
             
             players.push(...newPlayers);
+            console.log('⚡ Added demo players:', newPlayers);
+            console.log('📊 Total players now:', players.length);
+            
             savePlayers();
             updateUI();
             showMessage(`✅ ${newPlayers.length} demo spillere tilføjet`, '#4ECDC4');
@@ -553,11 +632,13 @@
             
             const newPlayers = names.map(name => ({
                 id: generatePlayerId(),
-                name: name,
-                addedAt: Date.now()
+                name: name
             }));
             
             players.push(...newPlayers);
+            console.log('📋 Imported players:', newPlayers);
+            console.log('📊 Total players now:', players.length);
+            
             savePlayers();
             updateUI();
             closeImportModal();
@@ -586,16 +667,13 @@
                 return;
             }
             
-            // Sort players by when they were added (newest first)
-            const sortedPlayers = [...players].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-            
-            playersList.innerHTML = sortedPlayers.map((player, index) => `
+            playersList.innerHTML = players.map((player, index) => `
                 <div class="player-item" style="animation-delay: ${index * 0.05}s">
                     <div class="player-info">
                         <div class="player-avatar">${getPlayerInitials(player.name)}</div>
                         <div class="player-details">
                             <span class="player-name">${escapeHtml(player.name)}</span>
-                            <span class="player-meta">Tilføjet ${getTimeAgo(player.addedAt)}</span>
+                            <span class="player-meta">ID: ${player.id.slice(-6)}</span>
                         </div>
                     </div>
                     <button class="remove-btn" onclick="removePlayer('${player.id}')" title="Fjern ${escapeHtml(player.name)}">
@@ -771,21 +849,6 @@
                 .join('');
         }
 
-        function getTimeAgo(timestamp) {
-            if (!timestamp) return 'for et øjeblik siden';
-            
-            const now = Date.now();
-            const diff = now - timestamp;
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
-            const days = Math.floor(diff / 86400000);
-            
-            if (days > 0) return `${days} dag${days > 1 ? 'e' : ''} siden`;
-            if (hours > 0) return `${hours} time${hours > 1 ? 'r' : ''} siden`;
-            if (minutes > 0) return `${minutes} minut${minutes > 1 ? 'ter' : ''} siden`;
-            return 'for et øjeblik siden';
-        }
-
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
@@ -879,13 +942,32 @@
         // Debug functions
         window.debugPlayers = function() {
             console.log('🔍 Debug Players Data:');
-            console.log('Players:', players);
+            console.log('Players Array:', players);
+            console.log('Players Count:', players.length);
             console.log('Sync Initialized:', syncInitialized);
             console.log('Is Online:', isOnline);
-            console.log('Local Storage:', localStorage.getItem('bakken-players'));
+            console.log('LocalStorage Raw:', localStorage.getItem('bakken-players'));
+            console.log('LocalStorage Parsed:', JSON.parse(localStorage.getItem('bakken-players') || '[]'));
             if (window.syncManager) {
                 console.log('Sync Status:', window.syncManager.getStatus());
             }
+        };
+
+        window.testDataTransfer = function() {
+            console.log('🧪 Testing data transfer...');
+            const testData = [
+                { id: 'test1', name: 'Test Player 1' },
+                { id: 'test2', name: 'Test Player 2' },
+                { id: 'test3', name: 'Test Player 3' }
+            ];
+            
+            localStorage.setItem('bakken-players', JSON.stringify(testData));
+            console.log('✅ Test data saved to localStorage');
+            
+            const verification = JSON.parse(localStorage.getItem('bakken-players'));
+            console.log('✅ Verification:', verification);
+            
+            return verification.length === 3;
         };
 
         window.resetApp = function() {
