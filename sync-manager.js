@@ -1,4 +1,4 @@
-// Supabase Sync Manager - Enhanced for Multi-Device Sync
+// Supabase Sync Manager - Enhanced with Fixed Tournament ID
 class SyncManager {
     constructor() {
         this.supabaseUrl = 'https://vpcfvjztjfggzsabidzr.supabase.co';
@@ -11,6 +11,9 @@ class SyncManager {
         this.connectionAttempts = 0;
         this.maxConnectionAttempts = 3;
         this.initTimeout = null;
+        
+        // FIXED TOURNAMENT ID - SAME FOR ALL DEVICES
+        this.FIXED_TOURNAMENT_ID = 'bakken-2025-haandaeg-tournament';
         
         console.log('🔧 SyncManager constructor called');
         
@@ -65,8 +68,8 @@ class SyncManager {
             
             console.log('✅ Database connection successful');
             
-            // Setup or get tournament
-            await this.setupTournament();
+            // Setup fixed tournament
+            await this.setupFixedTournament();
             
             // Setup realtime if available
             this.setupRealtimeSubscriptions();
@@ -91,57 +94,74 @@ class SyncManager {
         console.log('📱 Falling back to offline-only mode');
         clearTimeout(this.initTimeout);
         this.isInitialized = true;
+        
+        // Still set the fixed tournament ID for offline mode
+        this.tournamentId = this.FIXED_TOURNAMENT_ID;
+        localStorage.setItem('bakken-tournament-id', this.FIXED_TOURNAMENT_ID);
+        
         this.updateStatus('offline-only');
     }
 
-    async setupTournament() {
+    async setupFixedTournament() {
         try {
-            let tournamentId = localStorage.getItem('bakken-tournament-id');
+            console.log('🏆 Setting up FIXED tournament for ALL devices...');
+            console.log('🔗 Fixed Tournament ID:', this.FIXED_TOURNAMENT_ID);
             
-            if (!tournamentId) {
-                console.log('🏆 Creating new tournament...');
+            // FORCE the same tournament ID on ALL devices
+            localStorage.setItem('bakken-tournament-id', this.FIXED_TOURNAMENT_ID);
+            this.tournamentId = this.FIXED_TOURNAMENT_ID;
+            
+            // Check if tournament exists in database
+            const { data, error } = await this.supabase
+                .from('tournaments')
+                .select('id, name, status')
+                .eq('id', this.FIXED_TOURNAMENT_ID)
+                .single();
+            
+            if (error || !data) {
+                console.log('🏆 Creating fixed tournament in database...');
                 
-                const { data, error } = await this.supabase
+                // Create the tournament with fixed ID
+                const { error: insertError } = await this.supabase
                     .from('tournaments')
                     .insert([{
-                        name: `Bakken ${new Date().getFullYear()}`,
-                        description: 'Håndæg og Håndbajere Tournament',
-                        status: 'active'
-                    }])
-                    .select()
-                    .single();
-
-                if (error) {
-                    console.error('❌ Tournament creation failed:', error);
-                    throw error;
+                        id: this.FIXED_TOURNAMENT_ID,
+                        name: `Bakken ${new Date().getFullYear()} - Håndæg og Håndbajere`,
+                        description: 'Fixed Tournament ID for all devices',
+                        status: 'active',
+                        settings: {
+                            fixed_tournament: true,
+                            created_by: 'system',
+                            device_sync: true
+                        }
+                    }]);
+                
+                if (insertError) {
+                    // Check if it's a duplicate key error (tournament already exists)
+                    if (insertError.message && insertError.message.includes('duplicate')) {
+                        console.log('✅ Fixed tournament already exists (duplicate key)');
+                    } else {
+                        console.error('❌ Tournament creation failed:', insertError);
+                        throw insertError;
+                    }
+                } else {
+                    console.log('✅ Fixed tournament created successfully');
                 }
-
-                tournamentId = data.id;
-                localStorage.setItem('bakken-tournament-id', tournamentId);
-                console.log('✅ Created tournament:', tournamentId);
             } else {
-                console.log('✅ Using existing tournament:', tournamentId);
-                
-                // Verify tournament exists
-                const { data, error } = await this.supabase
-                    .from('tournaments')
-                    .select('id, name, status')
-                    .eq('id', tournamentId)
-                    .single();
-                
-                if (error || !data) {
-                    console.warn('⚠️ Tournament not found, creating new one');
-                    localStorage.removeItem('bakken-tournament-id');
-                    return this.setupTournament(); // Recursive call to create new
-                }
-                
-                console.log('✅ Tournament verified:', data.name);
+                console.log('✅ Fixed tournament verified:', data.name);
             }
-
-            this.tournamentId = tournamentId;
+            
+            // Show success message
+            this.showMessage('🔗 Using shared tournament ID', '#4ECDC4');
+            
         } catch (error) {
-            console.error('❌ Tournament setup failed:', error);
-            throw error;
+            console.error('❌ Fixed tournament setup failed:', error);
+            
+            // Even if database fails, use the fixed ID locally
+            this.tournamentId = this.FIXED_TOURNAMENT_ID;
+            localStorage.setItem('bakken-tournament-id', this.FIXED_TOURNAMENT_ID);
+            
+            console.log('📱 Using fixed tournament ID offline');
         }
     }
 
@@ -485,11 +505,9 @@ class SyncManager {
         try {
             console.log('🔄 Force syncing from master device...');
             
-            // Set same tournament ID
-            if (masterDeviceData.tournamentId) {
-                localStorage.setItem('bakken-tournament-id', masterDeviceData.tournamentId);
-                this.tournamentId = masterDeviceData.tournamentId;
-            }
+            // Always use the fixed tournament ID
+            localStorage.setItem('bakken-tournament-id', this.FIXED_TOURNAMENT_ID);
+            this.tournamentId = this.FIXED_TOURNAMENT_ID;
             
             // Sync players
             if (masterDeviceData.players) {
@@ -527,16 +545,16 @@ class SyncManager {
         try {
             console.log('🔄 Resetting device and syncing...');
             
-            // Clear local data
-            localStorage.removeItem('bakken-tournament-id');
+            // Clear local data but keep the fixed tournament ID
             localStorage.removeItem('bakken-players');
             localStorage.removeItem('bakken-teams');
             localStorage.removeItem('bakken-games');
             
-            this.showMessage('🔄 Clearing local data...', '#FF9A42');
+            // Ensure fixed tournament ID is set
+            localStorage.setItem('bakken-tournament-id', this.FIXED_TOURNAMENT_ID);
+            this.tournamentId = this.FIXED_TOURNAMENT_ID;
             
-            // Reinitialize
-            await this.init();
+            this.showMessage('🔄 Clearing local data...', '#FF9A42');
             
             // Load fresh data from cloud
             const cloudData = await this.loadFromCloud();
@@ -582,6 +600,8 @@ class SyncManager {
         
         return {
             tournamentId,
+            fixedTournamentId: this.FIXED_TOURNAMENT_ID,
+            isUsingFixedId: tournamentId === this.FIXED_TOURNAMENT_ID,
             players,
             teams,
             games,
@@ -597,6 +617,8 @@ class SyncManager {
             online: this.isOnline,
             initialized: this.isInitialized,
             tournamentId: this.tournamentId,
+            fixedTournamentId: this.FIXED_TOURNAMENT_ID,
+            isUsingFixedId: this.tournamentId === this.FIXED_TOURNAMENT_ID,
             pendingSync: this.syncQueue.length,
             hasSupabase: !!this.supabase
         };
@@ -621,8 +643,11 @@ window.syncManager = new SyncManager();
 window.testSync = function() {
     console.log('🧪 Testing sync connection...');
     if (window.syncManager) {
-        console.log('Sync Status:', window.syncManager.getStatus());
+        const status = window.syncManager.getStatus();
+        console.log('Sync Status:', status);
         console.log('Tournament ID:', window.syncManager.tournamentId);
+        console.log('Fixed Tournament ID:', window.syncManager.FIXED_TOURNAMENT_ID);
+        console.log('Using Fixed ID:', status.isUsingFixedId);
         console.log('Supabase Client:', !!window.syncManager.supabase);
         console.log('Is Online:', window.syncManager.isOnline);
         console.log('Is Initialized:', window.syncManager.isInitialized);
@@ -650,4 +675,25 @@ window.forceSync = function() {
     if (window.syncManager) {
         window.syncManager.syncPendingChanges();
     }
+};
+
+window.checkTournamentId = function() {
+    const currentId = localStorage.getItem('bakken-tournament-id');
+    const fixedId = window.syncManager ? window.syncManager.FIXED_TOURNAMENT_ID : 'bakken-2025-haandaeg-tournament';
+    
+    console.log('🔍 Tournament ID Check:');
+    console.log('Current ID:', currentId);
+    console.log('Fixed ID:', fixedId);
+    console.log('Match:', currentId === fixedId);
+    
+    if (currentId !== fixedId) {
+        console.log('⚠️ Tournament ID mismatch - fixing...');
+        localStorage.setItem('bakken-tournament-id', fixedId);
+        if (window.syncManager) {
+            window.syncManager.tournamentId = fixedId;
+        }
+        console.log('✅ Tournament ID fixed');
+    }
+    
+    return { currentId, fixedId, match: currentId === fixedId };
 };
