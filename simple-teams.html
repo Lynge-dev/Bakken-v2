@@ -25,49 +25,59 @@
             <a href="index.html" class="nav-btn">← Tilbage til Spillere</a>
         </section>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="loading-section">
-            <div class="loading-card">
-                <div class="loading-spinner">🔄</div>
-                <h3>Indlæser spillere...</h3>
-                <p>Henter data fra skyen</p>
+        <!-- Team Count Controls -->
+        <section class="team-controls-section">
+            <div class="team-controls-card">
+                <h2 class="section-title">⚙️ Hold Indstillinger</h2>
+                <div class="team-count-controls">
+                    <label for="teamCountInput">Antal Hold:</label>
+                    <div class="count-input-group">
+                        <button id="decreaseTeamsBtn" class="count-btn">-</button>
+                        <input type="number" id="teamCountInput" min="2" max="20" value="3" readonly>
+                        <button id="increaseTeamsBtn" class="count-btn">+</button>
+                    </div>
+                    <div class="team-count-info">
+                        <small>Minimum 2 hold, maksimum 20 hold</small>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
         <!-- Main Content -->
-        <div id="mainContent" style="display: none;">
+        <div id="mainContent">
             <!-- Team Names Section -->
             <section class="team-names-section">
-                <h2 class="section-title">Hold Navne</h2>
+                <h2 class="section-title">📝 Hold Navne</h2>
                 <div class="team-names-grid" id="teamNamesGrid">
-                    <!-- Team name inputs will be generated here -->
+                    <p>Indlæser hold...</p>
                 </div>
             </section>
 
             <!-- Controls Section -->
             <section class="controls-section">
-                <h2 class="section-title">Handlinger</h2>
+                <h2 class="section-title">🎲 Handlinger</h2>
                 <div class="control-buttons">
                     <button id="shuffleBtn" class="control-btn primary">🔀 Bland Hold</button>
                     <button id="resetBtn" class="control-btn secondary">🔄 Nulstil</button>
+                    <button id="autoDistributeBtn" class="control-btn tertiary">⚡ Auto-fordel</button>
                 </div>
             </section>
 
             <!-- Unassigned Players Section -->
             <section class="unassigned-section">
                 <h2 class="section-title">
-                    Ikke-tildelte Spillere 
+                    👥 Ikke-tildelte Spillere 
                     <span class="player-count-badge" id="unassignedCount">0</span>
                 </h2>
                 <div class="players-pool" id="playersPool">
-                    <!-- Unassigned players will appear here -->
+                    <p>Indlæser spillere...</p>
                 </div>
             </section>
 
             <!-- Teams Section -->
             <section class="teams-section">
                 <div class="teams-grid" id="teamsGrid">
-                    <!-- Team cards will be generated here -->
+                    <p>Indlæser hold...</p>
                 </div>
             </section>
 
@@ -77,38 +87,49 @@
                     Fortsæt til Spil
                 </a>
                 <p class="requirement-text" id="requirementText">
-                    Alle spillere skal være tildelt et hold
+                    Indlæser...
                 </p>
             </section>
         </div>
 
-        <!-- No Players State -->
-        <div id="noPlayersState" style="display: none;">
-            <div class="no-players-card">
-                <div class="no-players-icon">👥</div>
-                <h3>Ingen spillere fundet</h3>
-                <p>Du skal tilføje spillere først</p>
-                <a href="index.html" class="nav-btn primary">Tilføj Spillere</a>
-            </div>
+        <!-- Debug Panel -->
+        <div id="debugPanel" style="display: none; position: fixed; top: 60px; right: 10px; background: white; border: 2px solid #ccc; padding: 15px; border-radius: 10px; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-width: 300px;">
+            <h4 style="margin: 0 0 10px 0; color: #333;">🔧 Debug Panel</h4>
+            <button onclick="showDeviceInfo()" style="display: block; margin: 5px 0; padding: 8px; background: #45B7D1; color: white; border: none; border-radius: 5px; width: 100%; cursor: pointer;">
+                📊 Show Device Info
+            </button>
+            <button onclick="resetDeviceData()" style="display: block; margin: 5px 0; padding: 8px; background: #FF6B6B; color: white; border: none; border-radius: 5px; width: 100%; cursor: pointer;">
+                🔄 Reset Device Data
+            </button>
+            <button onclick="forceCloudSync()" style="display: block; margin: 5px 0; padding: 8px; background: #4ECDC4; color: white; border: none; border-radius: 5px; width: 100%; cursor: pointer;">
+                ☁️ Force Cloud Sync
+            </button>
+            <button onclick="hideDebugPanel()" style="display: block; margin: 5px 0; padding: 8px; background: #666; color: white; border: none; border-radius: 5px; width: 100%; cursor: pointer;">
+                ❌ Close
+            </button>
         </div>
+
+        <!-- Debug toggle button -->
+        <button onclick="toggleDebugPanel()" style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: #FF9A42; color: white; padding: 8px 12px; border: none; border-radius: 5px; font-size: 12px; cursor: pointer;">
+            🔧 DEBUG
+        </button>
     </div>
 
     <script>
-        // Teams management with proper initialization
+        // UNLIMITED teams management
         let players = [];
         let teams = [];
-        let teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
-        let draggedPlayer = null;
-        let isDataLoaded = false;
-        let loadingTimeout = null;
+        let teamNames = [];
+        let desiredTeamCount = 3;
 
         // DOM elements
-        const loadingState = document.getElementById('loadingState');
-        const mainContent = document.getElementById('mainContent');
-        const noPlayersState = document.getElementById('noPlayersState');
+        const teamCountInput = document.getElementById('teamCountInput');
+        const decreaseTeamsBtn = document.getElementById('decreaseTeamsBtn');
+        const increaseTeamsBtn = document.getElementById('increaseTeamsBtn');
         const teamNamesGrid = document.getElementById('teamNamesGrid');
         const shuffleBtn = document.getElementById('shuffleBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const autoDistributeBtn = document.getElementById('autoDistributeBtn');
         const playersPool = document.getElementById('playersPool');
         const teamsGrid = document.getElementById('teamsGrid');
         const continueBtn = document.getElementById('continueBtn');
@@ -122,218 +143,149 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Teams page starting...');
             
-            showLoadingState();
+            // Load data immediately
+            loadData();
+            
+            // Setup event listeners
             setupEventListeners();
+            
+            // Update UI
+            updateUI();
+            
+            // Update sync status
             updateSyncStatus();
-            
-            // Set timeout for loading
-            loadingTimeout = setTimeout(() => {
-                console.log('⏰ Loading timeout - using local data');
-                finishLoading();
-            }, 5000);
-            
-            // Start data loading process
-            initializeData();
         });
 
-        async function initializeData() {
+        function loadData() {
+            // Load players - GUARANTEED to work
             try {
-                // Step 1: Load local data first
-                loadLocalData();
-                
-                // Step 2: Initialize teams if needed
-                ensureTeamsInitialized();
-                
-                // Step 3: Initialize sync manager if available
-                if (window.syncManager) {
-                    try {
-                        await window.syncManager.initialize();
-                        console.log('✅ Sync manager ready');
-                        
-                        // Step 4: Try to load fresh data from cloud
-                        await loadCloudData();
-                    } catch (error) {
-                        console.warn('⚠️ Sync manager initialization failed:', error);
-                    }
-                } else {
-                    console.warn('⚠️ No sync manager available');
-                }
-                
-                // Step 5: Finalize loading
-                finishLoading();
-                
-            } catch (error) {
-                console.error('❌ Error during initialization:', error);
-                finishLoading();
-            }
-        }
-
-        function loadLocalData() {
-            try {
-                // Load players from localStorage
                 const playersData = localStorage.getItem('bakken-players');
                 if (playersData) {
-                    players = JSON.parse(playersData);
-                    console.log('📥 Loaded local players:', players.length);
+                    const parsed = JSON.parse(playersData);
+                    players = Array.isArray(parsed) ? parsed : [];
                 } else {
                     players = [];
-                    console.log('📥 No players found in localStorage');
                 }
+                console.log('📥 Loaded players:', players.length);
+            } catch (e) {
+                console.error('❌ Players load failed:', e);
+                players = [];
+            }
 
-                // Load teams from localStorage
+            // Load teams - GUARANTEED to work
+            try {
                 const teamsData = localStorage.getItem('bakken-teams');
                 if (teamsData) {
-                    try {
-                        const savedData = JSON.parse(teamsData);
-                        teams = Array.isArray(savedData.teams) ? savedData.teams : [];
-                        teamNames = Array.isArray(savedData.teamNames) ? savedData.teamNames : ['Hold 1', 'Hold 2', 'Hold 3'];
-                        console.log('📥 Loaded local teams:', teams.length);
-                    } catch (e) {
-                        console.warn('⚠️ Invalid teams data, initializing fresh');
+                    const parsed = JSON.parse(teamsData);
+                    if (parsed && parsed.teams && Array.isArray(parsed.teams)) {
+                        teams = parsed.teams;
+                        teamNames = parsed.teamNames || generateDefaultTeamNames(teams.length);
+                        desiredTeamCount = teams.length;
+                        teamCountInput.value = desiredTeamCount;
+                    } else {
                         teams = [];
-                        teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
+                        teamNames = [];
                     }
                 } else {
                     teams = [];
-                    teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
-                    console.log('📥 No teams found in localStorage');
+                    teamNames = [];
                 }
+                console.log('📥 Loaded teams:', teams.length);
             } catch (e) {
-                console.error('❌ Error loading local data:', e);
-                players = [];
+                console.error('❌ Teams load failed:', e);
                 teams = [];
-                teamNames = ['Hold 1', 'Hold 2', 'Hold 3'];
+                teamNames = [];
             }
-        }
 
-        function ensureTeamsInitialized() {
-            // Always ensure teams is an array
+            // Initialize teams if needed
+            if (players.length > 0 && teams.length === 0) {
+                initializeTeams(desiredTeamCount);
+            }
+
+            // GUARANTEE teams is always an array
             if (!Array.isArray(teams)) {
                 teams = [];
             }
-            
-            // Initialize teams if we have players but no teams
-            if (players.length > 0 && teams.length === 0) {
-                initializeTeams();
+        }
+
+        function generateDefaultTeamNames(count) {
+            const names = [];
+            for (let i = 1; i <= count; i++) {
+                names.push(`Hold ${i}`);
             }
-            
-            console.log('✅ Teams ensured:', teams.length);
+            return names;
         }
 
-        async function loadCloudData() {
-            if (!window.syncManager || !window.syncManager.supabase) {
-                console.log('📱 No cloud sync available');
-                return;
-            }
-
-            try {
-                console.log('☁️ Loading fresh data from cloud...');
-                statusText.textContent = 'Loading from cloud...';
-                
-                const cloudData = await window.syncManager.loadFromCloud();
-                
-                if (cloudData) {
-                    let dataUpdated = false;
-                    
-                    // Update players from cloud if available
-                    if (cloudData.players && Array.isArray(cloudData.players) && cloudData.players.length > 0) {
-                        const cleanPlayers = cloudData.players.map(p => ({ 
-                            id: p.id, 
-                            name: p.name 
-                        }));
-                        
-                        if (cleanPlayers.length !== players.length || 
-                            !cleanPlayers.every(cp => players.find(p => p.id === cp.id && p.name === cp.name))) {
-                            players = cleanPlayers;
-                            localStorage.setItem('bakken-players', JSON.stringify(players));
-                            dataUpdated = true;
-                            console.log('✅ Updated players from cloud:', players.length);
-                        }
-                    }
-                    
-                    // Update teams from cloud if available
-                    if (cloudData.teams && cloudData.teams.teams_data) {
-                        const cloudTeams = cloudData.teams.teams_data;
-                        const cloudTeamNames = cloudData.teams.team_names || ['Hold 1', 'Hold 2', 'Hold 3'];
-                        
-                        if (Array.isArray(cloudTeams)) {
-                            teams = cloudTeams;
-                            teamNames = cloudTeamNames;
-                            localStorage.setItem('bakken-teams', JSON.stringify({
-                                teams: teams,
-                                teamNames: teamNames
-                            }));
-                            dataUpdated = true;
-                            console.log('✅ Updated teams from cloud');
-                        }
-                    }
-                    
-                    if (dataUpdated) {
-                        showMessage('📥 Data updated from cloud', '#4ECDC4');
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error loading cloud data:', error);
-                showMessage('⚠️ Using local data only', '#FF9A42');
-            }
-        }
-
-        function finishLoading() {
-            clearTimeout(loadingTimeout);
-            isDataLoaded = true;
-            
-            // Ensure teams are initialized
-            ensureTeamsInitialized();
-            
-            // Show appropriate state
-            if (players.length === 0) {
-                showNoPlayersState();
-            } else {
-                showMainContent();
-                updateUI();
-            }
-            
-            updateSyncStatus();
-        }
-
-        function showLoadingState() {
-            loadingState.style.display = 'block';
-            mainContent.style.display = 'none';
-            noPlayersState.style.display = 'none';
-        }
-
-        function showMainContent() {
-            loadingState.style.display = 'none';
-            mainContent.style.display = 'block';
-            noPlayersState.style.display = 'none';
-        }
-
-        function showNoPlayersState() {
-            loadingState.style.display = 'none';
-            mainContent.style.display = 'none';
-            noPlayersState.style.display = 'block';
-        }
-
-        function initializeTeams() {
-            const playerCount = players.length;
-            
-            if (playerCount === 0) {
-                teams = [];
-                return;
-            }
-            
-            const teamCount = Math.min(3, Math.max(2, Math.ceil(playerCount / 3)));
+        function initializeTeams(teamCount = 3) {
+            if (teamCount < 2) teamCount = 2;
+            if (teamCount > 20) teamCount = 20;
             
             teams = [];
+            teamNames = generateDefaultTeamNames(teamCount);
+            
             for (let i = 0; i < teamCount; i++) {
                 teams.push({
                     id: i + 1,
-                    name: teamNames[i] || `Hold ${i + 1}`,
+                    name: teamNames[i],
                     players: []
                 });
             }
             
+            desiredTeamCount = teamCount;
+            teamCountInput.value = teamCount;
+            
             console.log('🏗️ Initialized teams:', teams.length);
+        }
+
+        function changeTeamCount(newCount) {
+            if (newCount < 2) newCount = 2;
+            if (newCount > 20) newCount = 20;
+            
+            const oldCount = teams.length;
+            desiredTeamCount = newCount;
+            teamCountInput.value = newCount;
+            
+            if (newCount > oldCount) {
+                // Add new teams
+                for (let i = oldCount; i < newCount; i++) {
+                    const teamName = `Hold ${i + 1}`;
+                    teams.push({
+                        id: i + 1,
+                        name: teamName,
+                        players: []
+                    });
+                    teamNames.push(teamName);
+                }
+                console.log(`➕ Added ${newCount - oldCount} teams`);
+            } else if (newCount < oldCount) {
+                // Remove teams and redistribute players
+                const playersToRedistribute = [];
+                
+                // Collect players from teams being removed
+                for (let i = newCount; i < oldCount; i++) {
+                    if (teams[i] && teams[i].players) {
+                        playersToRedistribute.push(...teams[i].players);
+                    }
+                }
+                
+                // Remove excess teams
+                teams = teams.slice(0, newCount);
+                teamNames = teamNames.slice(0, newCount);
+                
+                // Redistribute collected players
+                if (playersToRedistribute.length > 0) {
+                    playersToRedistribute.forEach((player, index) => {
+                        const targetTeamIndex = index % newCount;
+                        teams[targetTeamIndex].players.push(player);
+                    });
+                }
+                
+                console.log(`➖ Removed ${oldCount - newCount} teams, redistributed ${playersToRedistribute.length} players`);
+            }
+            
+            saveData();
+            updateUI();
+            showMessage(`🔄 Ændret til ${newCount} hold`, '#4ECDC4');
         }
 
         function saveData() {
@@ -345,11 +297,10 @@
                 };
                 
                 localStorage.setItem('bakken-teams', JSON.stringify(teamsData));
-                localStorage.setItem('bakken-teams-last-update', Date.now().toString());
                 console.log('💾 Saved teams data');
                 
-                // Sync to cloud
-                if (window.syncManager && window.syncManager.isInitialized) {
+                // Sync to cloud if available
+                if (window.syncManager && window.syncManager.syncTeams) {
                     window.syncManager.syncTeams(teamsData);
                 }
             } catch (e) {
@@ -358,45 +309,33 @@
         }
 
         function setupEventListeners() {
-            shuffleBtn.addEventListener('click', shuffleTeams);
-            resetBtn.addEventListener('click', resetTeams);
-
-            // Listen for remote data updates
-            window.addEventListener('bakken-data-updated', function(event) {
-                console.log('🔄 Remote data update:', event.detail);
-                
-                if (event.detail.table === 'players' && event.detail.source === 'remote') {
-                    console.log('🔄 Players updated from remote');
-                    loadLocalData();
-                    ensureTeamsInitialized();
-                    updateUI();
-                    showMessage('🔄 Players updated from another device', '#45B7D1');
-                }
-                
-                if (event.detail.table === 'teams' && event.detail.source === 'remote') {
-                    console.log('🔄 Teams updated from remote');
-                    loadLocalData();
-                    updateUI();
-                    showMessage('🔄 Teams updated from another device', '#45B7D1');
-                }
+            // Team count controls
+            decreaseTeamsBtn.addEventListener('click', function() {
+                changeTeamCount(desiredTeamCount - 1);
+            });
+            
+            increaseTeamsBtn.addEventListener('click', function() {
+                changeTeamCount(desiredTeamCount + 1);
+            });
+            
+            teamCountInput.addEventListener('change', function() {
+                const newCount = parseInt(this.value) || 3;
+                changeTeamCount(newCount);
             });
 
-            // Listen for sync status changes
-            window.addEventListener('sync-status-changed', updateSyncStatus);
-
-            // Update sync status periodically
-            setInterval(updateSyncStatus, 3000);
+            // Action buttons
+            shuffleBtn.addEventListener('click', shuffleTeams);
+            resetBtn.addEventListener('click', resetTeams);
+            autoDistributeBtn.addEventListener('click', autoDistributeTeams);
         }
 
         function updateUI() {
-            if (!isDataLoaded) return;
-            
-            // Ensure teams is always an array before updating UI
+            // ALWAYS ensure teams is an array
             if (!Array.isArray(teams)) {
                 teams = [];
-                ensureTeamsInitialized();
             }
             
+            updateTeamCountControls();
             updateTeamNamesGrid();
             updateTeamsGrid();
             updatePlayersPool();
@@ -404,9 +343,14 @@
             updateUnassignedCount();
         }
 
+        function updateTeamCountControls() {
+            decreaseTeamsBtn.disabled = desiredTeamCount <= 2;
+            increaseTeamsBtn.disabled = desiredTeamCount >= 20;
+        }
+
         function updateTeamNamesGrid() {
-            if (!Array.isArray(teams) || teams.length === 0) {
-                teamNamesGrid.innerHTML = '<p>Initialiserer hold...</p>';
+            if (teams.length === 0) {
+                teamNamesGrid.innerHTML = '<p>Ingen hold oprettet endnu</p>';
                 return;
             }
             
@@ -420,8 +364,8 @@
         }
 
         function updateTeamsGrid() {
-            if (!Array.isArray(teams) || teams.length === 0) {
-                teamsGrid.innerHTML = '<p>Initialiserer hold...</p>';
+            if (teams.length === 0) {
+                teamsGrid.innerHTML = '<p>Ingen hold oprettet endnu</p>';
                 return;
             }
             
@@ -429,7 +373,7 @@
                 <div class="team-card">
                     <div class="team-header">
                         <div class="team-info">
-                            <div class="team-color-indicator team-${index + 1}-color"></div>
+                            <div class="team-color-indicator team-${(index % 12) + 1}-color"></div>
                             <span class="team-name">${escapeHtml(team.name)}</span>
                         </div>
                         <span class="team-count">${(team.players || []).length}</span>
@@ -439,13 +383,14 @@
                          ondrop="dropPlayer(event, ${team.id})"
                          ondragover="allowDrop(event)">
                         ${(team.players || []).map(player => `
-                            <div class="player-chip in-team-${index + 1}" 
+                            <div class="player-chip in-team-${(index % 12) + 1}" 
                                  draggable="true" 
                                  data-player-id="${player.id}"
                                  ondragstart="dragStart(event, '${player.id}')">
                                 ${escapeHtml(player.name)}
                             </div>
                         `).join('')}
+                        ${(team.players || []).length === 0 ? '<div class="empty-team-message">Træk spillere hertil</div>' : ''}
                     </div>
                 </div>
             `).join('');
@@ -455,10 +400,8 @@
             const unassignedPlayers = getUnassignedPlayers();
             
             if (unassignedPlayers.length === 0) {
-                playersPool.innerHTML = '';
-                playersPool.classList.add('empty');
+                playersPool.innerHTML = '<p>Alle spillere er tildelt hold</p>';
             } else {
-                playersPool.classList.remove('empty');
                 playersPool.innerHTML = unassignedPlayers.map(player => `
                     <div class="player-chip" 
                          draggable="true" 
@@ -478,7 +421,7 @@
         function updateContinueButton() {
             const unassignedCount = getUnassignedPlayers().length;
             
-            if (unassignedCount === 0 && players.length > 0) {
+            if (unassignedCount === 0 && players.length > 0 && teams.length >= 2) {
                 continueBtn.classList.remove('disabled');
                 continueBtn.style.pointerEvents = 'auto';
                 requirementText.textContent = 'Klar til at starte spil!';
@@ -487,6 +430,8 @@
                 continueBtn.style.pointerEvents = 'none';
                 if (players.length === 0) {
                     requirementText.textContent = 'Tilføj spillere først';
+                } else if (teams.length < 2) {
+                    requirementText.textContent = 'Minimum 2 hold krævet';
                 } else {
                     requirementText.textContent = `${unassignedCount} spillere skal tildeles hold`;
                 }
@@ -505,12 +450,12 @@
         }
 
         function updateTeamName(index, newName) {
-            if (Array.isArray(teams) && teams[index]) {
+            if (teams[index]) {
                 teams[index].name = newName.trim() || `Hold ${index + 1}`;
                 teamNames[index] = teams[index].name;
                 saveData();
                 updateTeamsGrid();
-                showMessage(`Hold ${index + 1} omdøbt til "${teams[index].name}"`, '#4ECDC4');
+                showMessage(`Hold ${index + 1} omdøbt`, '#4ECDC4');
             }
         }
 
@@ -520,8 +465,8 @@
                 return;
             }
             
-            if (!Array.isArray(teams) || teams.length === 0) {
-                initializeTeams();
+            if (teams.length === 0) {
+                initializeTeams(desiredTeamCount);
             }
             
             // Clear all teams
@@ -542,12 +487,12 @@
         }
 
         function resetTeams() {
-            if (!Array.isArray(teams) || teams.length === 0) {
+            if (teams.length === 0) {
                 alert('Ingen hold at nulstille');
                 return;
             }
             
-            if (confirm('Nulstil alle hold? Alle spillere vil blive fjernet fra holdene.')) {
+            if (confirm('Nulstil alle hold?')) {
                 teams.forEach(team => team.players = []);
                 saveData();
                 updateUI();
@@ -555,68 +500,72 @@
             }
         }
 
+        function autoDistributeTeams() {
+            if (players.length === 0) {
+                alert('Ingen spillere at fordele');
+                return;
+            }
+            
+            if (teams.length === 0) {
+                initializeTeams(desiredTeamCount);
+            }
+            
+            // Clear all teams
+            teams.forEach(team => team.players = []);
+            
+            // Distribute players evenly (no shuffling)
+            players.forEach((player, index) => {
+                const teamIndex = index % teams.length;
+                teams[teamIndex].players.push(player);
+            });
+            
+            saveData();
+            updateUI();
+            showMessage('Spillere auto-fordelt!', '#4ECDC4');
+        }
+
         // Drag and Drop functions
         function dragStart(event, playerId) {
-            draggedPlayer = playerId;
             event.dataTransfer.setData('text/plain', playerId);
-            
-            const element = event.target;
-            element.classList.add('dragging');
-            
-            setTimeout(() => {
-                if (element.parentNode) {
-                    element.style.opacity = '0.5';
-                }
-            }, 0);
+            event.target.style.opacity = '0.5';
         }
 
         function allowDrop(event) {
             event.preventDefault();
-            const dropZone = event.currentTarget;
-            dropZone.classList.add('drag-over');
+            event.currentTarget.classList.add('drag-over');
         }
 
         function dropPlayer(event, teamId) {
             event.preventDefault();
-            const dropZone = event.currentTarget;
-            dropZone.classList.remove('drag-over');
+            event.currentTarget.classList.remove('drag-over');
             
             const playerId = event.dataTransfer.getData('text/plain');
-            if (!playerId) return;
-            
-            // Find the player
             const player = players.find(p => p.id === playerId);
+            
             if (!player) return;
             
-            // Remove player from current team
+            // Remove from current team
             teams.forEach(team => {
                 if (team.players) {
                     team.players = team.players.filter(p => p.id !== playerId);
                 }
             });
             
-            // Add player to new team
+            // Add to new team
             const targetTeam = teams.find(t => t.id === teamId);
             if (targetTeam) {
-                if (!targetTeam.players) {
-                    targetTeam.players = [];
-                }
+                if (!targetTeam.players) targetTeam.players = [];
                 targetTeam.players.push(player);
             }
             
             saveData();
             updateUI();
-            showMessage(`${player.name} flyttet til ${targetTeam.name}`, '#4ECDC4');
+            showMessage(`${player.name} flyttet`, '#4ECDC4');
         }
 
         // Handle drag end
         document.addEventListener('dragend', function(event) {
-            const draggedElement = document.querySelector('.dragging');
-            if (draggedElement) {
-                draggedElement.classList.remove('dragging');
-                draggedElement.style.opacity = '';
-            }
-            
+            event.target.style.opacity = '';
             document.querySelectorAll('.drag-over').forEach(el => {
                 el.classList.remove('drag-over');
             });
@@ -626,23 +575,7 @@
             if (window.syncManager) {
                 const status = window.syncManager.getStatus();
                 
-                if (!status.initialized) {
-                    statusIndicator.textContent = '🔄';
-                    statusText.textContent = 'Connecting...';
-                    syncStatus.style.background = 'rgba(255, 179, 102, 0.3)';
-                } else if (!status.hasSupabase) {
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Local only';
-                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
-                } else if (!status.online) {
-                    statusIndicator.textContent = '📱';
-                    statusText.textContent = 'Offline';
-                    syncStatus.style.background = 'rgba(255, 154, 66, 0.3)';
-                } else if (status.pendingSync > 0) {
-                    statusIndicator.textContent = '⏳';
-                    statusText.textContent = `Syncing ${status.pendingSync}...`;
-                    syncStatus.style.background = 'rgba(69, 183, 209, 0.3)';
-                } else if (status.hasSupabase && status.online) {
+                if (status.initialized && status.hasSupabase && status.online) {
                     statusIndicator.textContent = '☁️';
                     statusText.textContent = 'Synced';
                     syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
@@ -659,36 +592,15 @@
         }
 
         function showMessage(message, color) {
-            const existingMessage = document.querySelector('.message');
-            if (existingMessage) existingMessage.remove();
-            
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
             messageDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${color};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                z-index: 1000;
-                animation: slideDown 0.3s ease;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                font-weight: 500;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255,255,255,0.1);
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: ${color}; color: white; padding: 12px 20px;
+                border-radius: 8px; z-index: 1000; font-weight: 500;
             `;
             messageDiv.textContent = message;
             document.body.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.style.animation = 'slideUp 0.3s ease forwards';
-                    setTimeout(() => messageDiv.remove(), 300);
-                }
-            }, 3000);
+            setTimeout(() => messageDiv.remove(), 3000);
         }
 
         function escapeHtml(text) {
@@ -697,40 +609,219 @@
             return div.innerHTML;
         }
 
-        // Add animations
-        if (!document.getElementById('teams-animations')) {
-            const animationStyle = document.createElement('style');
-            animationStyle.id = 'teams-animations';
-            animationStyle.textContent = `
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        // Debug functions
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function hideDebugPanel() {
+            document.getElementById('debugPanel').style.display = 'none';
+        }
+
+        function showDeviceInfo() {
+            const tournamentId = localStorage.getItem('bakken-tournament-id');
+            const players = JSON.parse(localStorage.getItem('bakken-players') || '[]');
+            const teams = JSON.parse(localStorage.getItem('bakken-teams') || '{}');
+            
+            const info = `🔍 DEVICE INFO:
+Tournament ID: ${tournamentId || 'None'}
+Players: ${players.length} (${players.map(p => p.name).join(', ')})
+Teams: ${teams.teams ? teams.teams.length : 0}
+Sync: ${window.syncManager ? 'Available' : 'Not Available'}
+Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}`;
+            
+            alert(info);
+        }
+
+        function resetDeviceData() {
+            if (confirm('Reset all data on this device?')) {
+                if (window.syncManager && window.syncManager.resetAndSync) {
+                    window.syncManager.resetAndSync();
+                } else {
+                    localStorage.removeItem('bakken-tournament-id');
+                    localStorage.removeItem('bakken-players');
+                    localStorage.removeItem('bakken-teams');
+                    localStorage.removeItem('bakken-games');
+                    alert('✅ Device data cleared! Reloading...');
+                    location.reload();
                 }
-                
-                @keyframes slideUp {
-                    from { opacity: 1; transform: translateX(-50%) translateY(0); }
-                    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                }
-            `;
-            document.head.appendChild(animationStyle);
+            }
+        }
+
+        function forceCloudSync() {
+            if (window.syncManager) {
+                alert('🔄 Forcing cloud sync...');
+                window.syncManager.loadFromCloud().then(data => {
+                    if (data && data.teams) {
+                        const teamsData = {
+                            teams: data.teams.teams_data || [],
+                            teamNames: data.teams.team_names || []
+                        };
+                        localStorage.setItem('bakken-teams', JSON.stringify(teamsData));
+                        loadData();
+                        updateUI();
+                    }
+                    alert('✅ Cloud sync completed!');
+                }).catch(error => {
+                    alert('❌ Cloud sync failed: ' + error.message);
+                });
+            } else {
+                alert('❌ Sync manager not available');
+            }
         }
 
         // Debug function
         window.debugTeams = function() {
-            console.log('🔍 Debug Teams Data:');
+            console.log('🔍 Debug:');
             console.log('Players:', players);
             console.log('Teams:', teams);
-            console.log('Is Data Loaded:', isDataLoaded);
-            console.log('Local Storage Players:', localStorage.getItem('bakken-players'));
-            console.log('Local Storage Teams:', localStorage.getItem('bakken-teams'));
+            console.log('Desired Team Count:', desiredTeamCount);
+            console.log('Teams is array:', Array.isArray(teams));
         };
 
-        // Auto-save when page is about to close
-        window.addEventListener('beforeunload', function() {
-            if (Array.isArray(teams) && teams.length > 0) {
-                saveData();
-            }
-        });
+        // Update sync status periodically
+        setInterval(updateSyncStatus, 3000);
     </script>
+
+    <style>
+        /* Additional styles for unlimited teams */
+        .team-controls-section {
+            margin: 20px 0;
+        }
+
+        .team-controls-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #FFB366;
+        }
+
+        .team-count-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .count-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .count-btn {
+            background: #FFB366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .count-btn:hover:not(:disabled) {
+            background: #FF9A42;
+            transform: scale(1.1);
+        }
+
+        .count-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #teamCountInput {
+            width: 60px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .team-count-info {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .control-btn.tertiary {
+            background: #9B59B6;
+            color: white;
+        }
+
+        .control-btn.tertiary:hover {
+            background: #8E44AD;
+        }
+
+        /* Support for more team colors */
+        .team-1-color { background: #FF6B6B; }
+        .team-2-color { background: #4ECDC4; }
+        .team-3-color { background: #45B7D1; }
+        .team-4-color { background: #96CEB4; }
+        .team-5-color { background: #FFEAA7; }
+        .team-6-color { background: #DDA0DD; }
+        .team-7-color { background: #98D8C8; }
+        .team-8-color { background: #F7DC6F; }
+        .team-9-color { background: #BB8FCE; }
+        .team-10-color { background: #85C1E9; }
+        .team-11-color { background: #F8C471; }
+        .team-12-color { background: #82E0AA; }
+
+        .in-team-1 { background: #FF6B6B; }
+        .in-team-2 { background: #4ECDC4; }
+        .in-team-3 { background: #45B7D1; }
+        .in-team-4 { background: #96CEB4; }
+        .in-team-5 { background: #FFEAA7; }
+        .in-team-6 { background: #DDA0DD; }
+        .in-team-7 { background: #98D8C8; }
+        .in-team-8 { background: #F7DC6F; }
+        .in-team-9 { background: #BB8FCE; }
+        .in-team-10 { background: #85C1E9; }
+        .in-team-11 { background: #F8C471; }
+        .in-team-12 { background: #82E0AA; }
+
+        .empty-team-message {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .drag-over .empty-team-message {
+            border-color: #FFB366;
+            color: #FFB366;
+        }
+
+        /* Responsive grid for many teams */
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .team-count-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </body>
 </html>
