@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Håndæg og Håndbajere - Spiller</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="sync-manager.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">🎮 Håndæg og Håndbajere - SPILLER</h1>
+            <p class="app-subtitle">Deltag i Turneringen</p>
+            <div class="sync-status" id="syncStatus">
+                <span class="status-indicator" id="statusIndicator">🔄</span>
+                <span class="status-text" id="statusText">Connecting...</span>
+            </div>
+        </header>
+
+        <!-- Player Welcome Section -->
+        <section class="player-welcome-section">
+            <div class="welcome-card">
+                <h3>🎮 Velkommen Spiller!</h3>
+                <p>Her kan du se turneringens status, tilføje spil resultater og følge med i stillingen.</p>
+                <div class="player-info" id="playerInfo">
+                    <div class="info-item">
+                        <span class="info-label">📊 Status:</span>
+                        <span class="info-value" id="tournamentStatus">Indlæser...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">👥 Spillere:</span>
+                        <span class="info-value" id="playerCountInfo">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🏆 Hold:</span>
+                        <span class="info-value" id="teamCountInfo">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🎮 Spil:</span>
+                        <span class="info-value" id="gameCountInfo">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <section class="tabs-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('standings')">🏆 Stilling</button>
+                <button class="tab-btn" onclick="showTab('addgame')">➕ Tilføj Spil</button>
+                <button class="tab-btn" onclick="showTab('games')">🎮 Alle Spil</button>
+                <button class="tab-btn" onclick="showTab('teams')">👥 Hold</button>
+            </div>
+        </section>
+
+        <!-- Standings Tab -->
+        <div id="standingsTab" class="tab-content active">
+            <section class="standings-section">
+                <h2 class="section-title">🏆 Aktuel Stilling</h2>
+                <div class="standings-grid" id="standingsGrid">
+                    <div class="loading-standings">Indlæser stilling...</div>
+                </div>
+            </section>
+
+            <section class="recent-games-section">
+                <h2 class="section-title">🎮 Seneste Spil</h2>
+                <div class="recent-games" id="recentGames">
+                    <div class="no-recent">Ingen spil endnu</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Add Game Tab -->
+        <div id="addgameTab" class="tab-content">
+            <section class="add-game-section">
+                <h2 class="section-title">➕ Tilføj Nyt Spil</h2>
+                <div class="add-game-card">
+                    <div class="input-group">
+                        <input type="text" 
+                               id="gameNameInput" 
+                               placeholder="Indtast spil navn (f.eks. 'Fodbold', 'Løb', 'Quiz')" 
+                               maxlength="50">
+                        <button id="addGameBtn" class="add-game-btn" disabled>
+                            ➕ Tilføj & Indtast Resultat
+                        </button>
+                    </div>
+                    <div class="add-game-hint">
+                        <small>Tilføj spil og indtast resultater med det samme</small>
+                    </div>
+                </div>
+            </section>
+
+            <section class="quick-games-section">
+                <h2 class="section-title">⚡ Hurtige Spil</h2>
+                <div class="quick-games-grid">
+                    <button class="quick-game-btn" onclick="addQuickGame('Fodbold')">⚽ Fodbold</button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Løb')">🏃 Løb</button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Quiz')">🧠 Quiz</button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Kast')">🎯 Kast</button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Balance')">⚖️ Balance</button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Styrke')">💪 Styrke</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- All Games Tab -->
+        <div id="gamesTab" class="tab-content">
+            <section class="all-games-section">
+                <h2 class="section-title">🎮 Alle Spil</h2>
+                <div class="games-filter">
+                    <button class="filter-btn active" onclick="filterGames('all')">Alle</button>
+                    <button class="filter-btn" onclick="filterGames('completed')">Afsluttede</button>
+                    <button class="filter-btn" onclick="filterGames('recent')">Seneste</button>
+                </div>
+                <div class="all-games-list" id="allGamesList">
+                    <div class="no-games">Ingen spil endnu</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Teams Tab -->
+        <div id="teamsTab" class="tab-content">
+            <section class="teams-overview-section">
+                <h2 class="section-title">👥 Hold Oversigt</h2>
+                <div class="teams-overview" id="teamsOverview">
+                    <div class="no-teams">Ingen hold oprettet endnu</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Refresh Button -->
+        <button onclick="refreshData()" class="refresh-btn" title="Opdater data">
+            🔄
+        </button>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="results-modal" id="resultsModal">
+        <div class="modal-backdrop" onclick="closeResultsModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalGameTitle">🎯 Indtast Resultater</h2>
+                <button class="close-btn" onclick="closeResultsModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="game-info">
+                    <h3 id="modalGameName">Spil Navn</h3>
+                    <p class="scoring-info">🏆 Point System: 1. plads = 2 point, 2. plads = 1 point, 3. plads = 0 point</p>
+                </div>
+                
+                <div class="winner-selection">
+                    <div class="winner-card">
+                        <div class="place-header">
+                            <span class="place-medal">🥇</span>
+                            <h4>1. Plads (2 point)</h4>
+                        </div>
+                        <div class="team-buttons" id="firstPlaceButtons"></div>
+                    </div>
+
+                    <div class="winner-card">
+                        <div class="place-header">
+                            <span class="place-medal">🥈</span>
+                            <h4>2. Plads (1 point)</h4>
+                        </div>
+                        <div class="team-buttons" id="secondPlaceButtons"></div>
+                    </div>
+
+                    <div class="winner-card" id="thirdPlaceCard">
+                        <div class="place-header">
+                            <span class="place-medal">🥉</span>
+                            <h4>3. Plads (0 point)</h4>
+                        </div>
+                        <div class="team-buttons" id="thirdPlaceButtons"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="saveResultBtn" class="modal-btn primary" disabled>
+                    💾 Gem Resultat
+                </button>
+                <button id="cancelResultBtn" class="modal-btn secondary" onclick="closeResultsModal()">
+                    ❌ Annuller
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Player interface - View tournament and add game results
+        let players = [];
+        let teams = [];
+        let games = [];
+        let currentGame = null;
+        let selectedResults = { first: null, second: null, third: null };
+        let currentFilter = 'all';
+
+        // DOM elements
+        const gameNameInput = document.getElementById('gameNameInput');
+        const addGameBtn = document.getElementById('addGameBtn');
+        const standingsGrid = document.getElementById('standingsGrid');
+        const recentGames = document.getElementById('recentGames');
+        const allGamesList = document.getElementById('allGamesList');
+        const teamsOverview = document.getElementById('teamsOverview');
+        
+        const resultsModal = document.getElementById('resultsModal');
+        const modalGameName = document.getElementById('modalGameName');
+        const firstPlaceButtons = document.getElementById('firstPlaceButtons');
+        const secondPlaceButtons = document.getElementById('secondPlaceButtons');
+        const thirdPlaceButtons = document.getElementById('thirdPlaceButtons');
+        const thirdPlaceCard = document.getElementById('thirdPlaceCard');
+        const saveResultBtn = document.getElementById('saveResultBtn');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎮 Player interface starting...');
+            
+            // Force player role
+            localStorage.setItem('bakken-user-role', 'player');
+            
+            loadAllData();
+            setupEventListeners();
+            updateAllUI();
+            updateSyncStatus();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+
+        function loadAllData() {
+            // Load players
+            try {
+                const playersData = localStorage.getItem('bakken-players');
+                players = playersData ? JSON.parse(playersData) : [];
+            } catch (e) {
+                players = [];
+            }
+
+            // Load teams
+            try {
+                const teamsData = localStorage.getItem('bakken-teams');
+                if (teamsData) {
+                    const parsed = JSON.parse(teamsData);
+                    teams = parsed.teams || [];
+                }
+            } catch (e) {
+                teams = [];
+            }
+
+            // Load games
+            try {
+                const gamesData = localStorage.getItem('bakken-games');
+                if (gamesData) {
+                    const parsed = JSON.parse(gamesData);
+                    games = parsed.games || [];
+                }
+            } catch (e) {
+                games = [];
+            }
+
+            console.log('📥 Player loaded data:', {
+                players: players.length,
+                teams: teams.length,
+                games: games.length
+            });
+        }
+
+        function setupEventListeners() {
+            // Add game
+            addGameBtn.addEventListener('click', addGameAndOpenPopup);
+            gameNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addGameAndOpenPopup();
+            });
+            gameNameInput.addEventListener('input', function() {
+                addGameBtn.disabled = this.value.trim().length === 0;
+            });
+
+            // Results modal
+            saveResultBtn.addEventListener('click', saveGameResult);
+            resultsModal.addEventListener('click', function(e) {
+                if (e.target === resultsModal || e.target.classList.contains('modal-backdrop')) {
+                    closeResultsModal();
+                }
+            });
+
+            // Sync events
+            setInterval(updateSyncStatus, 3000);
+            
+            // Listen for data updates
+            window.addEventListener('bakken-data-updated', function(event) {
+                console.log('🔄 Data updated:', event.detail);
+                refreshData();
+            });
+        }
+
+        // Tab Management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+
+            updateAllUI();
+        }
+
+        // Data Refresh
+        async function refreshData() {
+            console.log('🔄 Refreshing player data...');
+            
+            try {
+                if (window.syncManager && window.syncManager.loadFromCloud) {
+                    const cloudData = await window.syncManager.loadFromCloud();
+                    
+                    if (cloudData) {
+                        let updated = false;
+                        
+                        // Update players
+                        if (cloudData.players && cloudData.players.length > 0) {
+                            const newPlayers = cloudData.players.map(p => ({ id: p.id, name: p.name }));
+                            if (JSON.stringify(newPlayers) !== JSON.stringify(players)) {
+                                players = newPlayers;
+                                localStorage.setItem('bakken-players', JSON.stringify(players));
+                                updated = true;
+                            }
+                        }
+                        
+                        // Update teams
+                        if (cloudData.teams && cloudData.teams.teams_data) {
+                            const newTeams = cloudData.teams.teams_data;
+                            if (JSON.stringify(newTeams) !== JSON.stringify(teams)) {
+                                teams = newTeams;
+                                const teamsData = {
+                                    teams: teams,
+                                    teamNames: cloudData.teams.team_names || []
+                                };
+                                localStorage.setItem('bakken-teams', JSON.stringify(teamsData));
+                                updated = true;
+                            }
+                        }
+                        
+                        // Update games
+                        if (cloudData.games && cloudData.games.games_data) {
+                            const newGames = cloudData.games.games_data;
+                            if (JSON.stringify(newGames) !== JSON.stringify(games)) {
+                                games = newGames;
+                                const gamesData = { games: games };
+                                localStorage.setItem('bakken-games', JSON.stringify(gamesData));
+                                updated = true;
+                            }
+                        }
+                        
+                        if (updated) {
+                            updateAllUI();
+                            showMessage('🔄 Data opdateret', '#4ECDC4');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Refresh failed:', error);
+            }
+        }
+
+        // Game Management
+        function addGameAndOpenPopup() {
+            const gameName = gameNameInput.value.trim();
+            
+            if (gameName === '') {
+                showMessage('⚠️ Indtast et spil navn', '#FF9A42');
+                return;
+            }
+            
+            if (teams.length < 2) {
+                showMessage('⚠️ Minimum 2 hold krævet. Vent på host opretter hold.', '#FF9A42');
+                return;
+            }
+            
+            if (games.some(game => game.name.toLowerCase() === gameName.toLowerCase())) {
+                showMessage('⚠️ Dette spil findes allerede', '#FF9A42');
+                return;
+            }
+            
+            const newGame = {
+                id: generateId(),
+                name: gameName,
+                status: 'active',
+                results: null,
+                createdAt: Date.now(),
+                addedBy: 'player'
+            };
+            
+            games.push(newGame);
+            currentGame = newGame;
+            
+            gameNameInput.value = '';
+            addGameBtn.disabled = true;
+            
+            openResultsPopup();
+            showMessage(`✅ "${gameName}" tilføjet - indtast resultater`, '#4ECDC4');
+        }
+
+        function addQuickGame(gameName) {
+            if (teams.length < 2) {
+                showMessage('⚠️ Minimum 2 hold krævet. Vent på host opretter hold.', '#FF9A42');
+                return;
+            }
+            
+            if (games.some(game => game.name.toLowerCase() === gameName.toLowerCase())) {
+                showMessage('⚠️ Dette spil findes allerede', '#FF9A42');
+                return;
+            }
+            
+            const newGame = {
+                id: generateId(),
+                name: gameName,
+                status: 'active',
+                results: null,
+                createdAt: Date.now(),
+                addedBy: 'player'
+            };
+            
+            games.push(newGame);
+            currentGame = newGame;
+            
+            openResultsPopup();
+            showMessage(`⚡ "${gameName}" tilføjet - indtast resultater`, '#4ECDC4');
+        }
+
+        function openResultsPopup() {
+            if (!currentGame) return;
+            
+            selectedResults = { first: null, second: null, third: null };
+            modalGameName.textContent = currentGame.name;
+            
+            generateTeamButtons();
+            
+            if (teams.length === 2) {
+                thirdPlaceCard.style.display = 'none';
+            } else {
+                thirdPlaceCard.style.display = 'block';
+            }
+            
+            resultsModal.classList.add('active');
+            saveResultBtn.disabled = true;
+        }
+
+        function closeResultsModal() {
+            resultsModal.classList.remove('active');
+            
+            if (currentGame && currentGame.status === 'active' && !currentGame.results) {
+                games = games.filter(g => g.id !== currentGame.id);
+            }
+            
+            currentGame = null;
+            selectedResults = { first: null, second: null, third: null };
+            saveResultBtn.disabled = true;
+            
+            updateAllUI();
+        }
+
+        function generateTeamButtons() {
+            const buttonHTML = teams.map(team => `
+                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'first')">
+                    ${escapeHtml(team.name)} (${team.players.length} spillere)
+                </button>
+            `).join('');
+            firstPlaceButtons.innerHTML = buttonHTML;
+            
+            const buttonHTML2 = teams.map(team => `
+                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'second')">
+                    ${escapeHtml(team.name)} (${team.players.length} spillere)
+                </button>
+            `).join('');
+            secondPlaceButtons.innerHTML = buttonHTML2;
+            
+            if (teams.length > 2) {
+                const buttonHTML3 = teams.map(team => `
+                    <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'third')">
+                        ${escapeHtml(team.name)} (${team.players.length} spillere)
+                    </button>
+                `).join('');
+                thirdPlaceButtons.innerHTML = buttonHTML3;
+            }
+        }
+
+        function selectTeamForPlace(teamId, place) {
+            selectedResults[place] = teamId;
+            updateTeamButtonStates();
+            
+            const canSave = teams.length === 2 ? 
+                (selectedResults.first !== null && selectedResults.second !== null) :
+                (selectedResults.first !== null && selectedResults.second !== null && selectedResults.third !== null);
+            
+            saveResultBtn.disabled = !canSave;
+        }
+
+        function updateTeamButtonStates() {
+            firstPlaceButtons.querySelectorAll('.team-btn').forEach(btn => {
+                const teamId = parseInt(btn.dataset.teamId);
+                btn.classList.toggle('selected', selectedResults.first === teamId);
+                btn.disabled = (selectedResults.second === teamId || selectedResults.third === teamId);
+            });
+            
+            secondPlaceButtons.querySelectorAll('.team-btn').forEach(btn => {
+                const teamId = parseInt(btn.dataset.teamId);
+                btn.classList.toggle('selected', selectedResults.second === teamId);
+                btn.disabled = (selectedResults.first === teamId || selectedResults.third === teamId);
+            });
+            
+            if (teams.length > 2) {
+                thirdPlaceButtons.querySelectorAll('.team-btn').forEach(btn => {
+                    const teamId = parseInt(btn.dataset.teamId);
+                    btn.classList.toggle('selected', selectedResults.third === teamId);
+                    btn.disabled = (selectedResults.first === teamId || selectedResults.second === teamId);
+                });
+            }
+        }
+
+        function saveGameResult() {
+            if (!currentGame) return;
+            
+            if (teams.length === 2) {
+                if (!selectedResults.first || !selectedResults.second) {
+                    showMessage('⚠️ Vælg både 1. og 2. plads', '#FF9A42');
+                    return;
+                }
+                selectedResults.third = null;
+            } else {
+                if (!selectedResults.first || !selectedResults.second || !selectedResults.third) {
+                    showMessage('⚠️ Vælg alle tre placeringer', '#FF9A42');
+                    return;
+                }
+            }
+            
+            const results = [];
+            
+            const firstTeam = teams.find(t => t.id === selectedResults.first);
+            results.push({
+                teamId: selectedResults.first,
+                teamName: firstTeam.name,
+                placement: 1,
+                points: 2
+            });
+            
+            const secondTeam = teams.find(t => t.id === selectedResults.second);
+            results.push({
+                teamId: selectedResults.second,
+                teamName: secondTeam.name,
+                placement: 2,
+                points: 1
+            });
+            
+            if (teams.length > 2 && selectedResults.third) {
+                const thirdTeam = teams.find(t => t.id === selectedResults.third);
+                results.push({
+                    teamId: selectedResults.third,
+                    teamName: thirdTeam.name,
+                    placement: 3,
+                    points: 0
+                });
+            }
+            
+            const placedTeamIds = [selectedResults.first, selectedResults.second, selectedResults.third].filter(id => id !== null);
+            teams.forEach(team => {
+                if (!placedTeamIds.includes(team.id)) {
+                    results.push({
+                        teamId: team.id,
+                        teamName: team.name,
+                        placement: teams.length > 2 ? 4 : 3,
+                        points: 0
+                    });
+                }
+            });
+            
+            currentGame.results = results;
+            currentGame.status = 'completed';
+            currentGame.completedAt = Date.now();
+            
+            saveData('games');
+            
+            resultsModal.classList.remove('active');
+            currentGame = null;
+            selectedResults = { first: null, second: null, third: null };
+            
+            updateAllUI();
+            showMessage(`✅ Resultat gemt!`, '#4ECDC4');
+            
+            gameNameInput.focus();
+        }
+
+        // Filter Functions
+        function filterGames(filter) {
+            currentFilter = filter;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateAllGamesUI();
+        }
+
+        // Data Management
+        function saveData(type) {
+            try {
+                switch (type) {
+                    case 'games':
+                        const gamesData = { games: games };
+                        localStorage.setItem('bakken-games', JSON.stringify(gamesData));
+                        if (window.syncManager && window.syncManager.syncGames) {
+                            window.syncManager.syncGames(gamesData);
+                        }
+                        break;
+                }
+            } catch (e) {
+                console.error('Save failed:', e);
+            }
+        }
+
+        // UI Updates
+        function updateAllUI() {
+            updateTournamentInfo();
+            updateStandingsUI();
+            updateRecentGamesUI();
+            updateAllGamesUI();
+            updateTeamsOverviewUI();
+        }
+
+        function updateTournamentInfo() {
+            document.getElementById('playerCountInfo').textContent = players.length;
+            document.getElementById('teamCountInfo').textContent = teams.length;
+            document.getElementById('gameCountInfo').textContent = games.filter(g => g.status === 'completed').length;
+            
+            const status = teams.length >= 2 ? 'Aktiv' : 'Venter på hold';
+            document.getElementById('tournamentStatus').textContent = status;
+        }
+
+        function updateStandingsUI() {
+            if (teams.length === 0) {
+                standingsGrid.innerHTML = '<div class="no-teams">Venter på host opretter hold</div>';
+                return;
+            }
+            
+            const standings = teams.map(team => {
+                let totalPoints = 0;
+                let gamesPlayed = 0;
+                
+                games.forEach(game => {
+                    if (game.status === 'completed' && game.results) {
+                        const teamResult = game.results.find(r => r.teamId === team.id);
+                        if (teamResult) {
+                            totalPoints += teamResult.points;
+                            gamesPlayed++;
+                        }
+                    }
+                });
+                
+                return { ...team, totalPoints, gamesPlayed };
+            });
+            
+            standings.sort((a, b) => b.totalPoints - a.totalPoints);
+            
+            standingsGrid.innerHTML = standings.map((team, index) => `
+                <div class="team-standing ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}">
+                    <div class="standing-position">${index + 1}</div>
+                    <div class="standing-info">
+                        <div class="standing-team">${escapeHtml(team.name)}</div>
+                        <div class="standing-members">${team.players.map(p => p.name).join(', ')}</div>
+                        <div class="standing-games">Spil: ${team.gamesPlayed}</div>
+                    </div>
+                    <div class="standing-score">${team.totalPoints}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateRecentGamesUI() {
+            const completedGames = games.filter(g => g.status === 'completed');
+            const recentGamesList = completedGames.slice(-3).reverse();
+            
+            if (recentGamesList.length === 0) {
+                recentGames.innerHTML = '<div class="no-recent">Ingen spil endnu</div>';
+                return;
+            }
+            
+            recentGames.innerHTML = recentGamesList.map(game => `
+                <div class="recent-game-item">
+                    <div class="game-name">${escapeHtml(game.name)}</div>
+                    <div class="game-result">
+                        🥇 ${game.results[0].teamName} | 
+                        🥈 ${game.results[1].teamName}
+                        ${game.results.length > 2 && game.results[2] ? ` | 🥉 ${game.results[2].teamName}` : ''}
+                    </div>
+                    <div class="game-time">${new Date(game.completedAt).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateAllGamesUI() {
+            let filteredGames = games;
+            
+            switch (currentFilter) {
+                case 'completed':
+                    filteredGames = games.filter(g => g.status === 'completed');
+                    break;
+                case 'recent':
+                    filteredGames = games.filter(g => g.status === 'completed').slice(-5).reverse();
+                    break;
+                default:
+                    filteredGames = games;
+            }
+            
+            if (filteredGames.length === 0) {
+                allGamesList.innerHTML = '<div class="no-games">Ingen spil i denne kategori</div>';
+                return;
+            }
+            
+            allGamesList.innerHTML = filteredGames.map(game => `
+                <div class="game-item ${game.status}">
+                    <div class="game-header">
+                        <div class="game-name">${escapeHtml(game.name)}</div>
+                        <div class="game-status">${game.status === 'completed' ? '✅ Afsluttet' : '⏳ Aktiv'}</div>
+                    </div>
+                    ${game.status === 'completed' && game.results ? `
+                        <div class="game-result">
+                            🥇 ${game.results[0].teamName} (2 pt) | 
+                            🥈 ${game.results[1].teamName} (1 pt)
+                            ${game.results.length > 2 && game.results[2] ? ` | 🥉 ${game.results[2].teamName} (0 pt)` : ''}
+                        </div>
+                        <div class="game-time">${new Date(game.completedAt).toLocaleString()}</div>
+                    ` : '<div class="game-pending">Venter på resultater</div>'}
+                    ${game.addedBy ? `<div class="game-added-by">Tilføjet af: ${game.addedBy}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function updateTeamsOverviewUI() {
+            if (teams.length === 0) {
+                teamsOverview.innerHTML = '<div class="no-teams">Venter på host opretter hold</div>';
+                return;
+            }
+            
+            teamsOverview.innerHTML = teams.map((team, index) => `
+                <div class="team-overview-card">
+                    <div class="team-header">
+                        <div class="team-info">
+                            <div class="team-color-indicator team-${(index % 12) + 1}-color"></div>
+                            <span class="team-name">${escapeHtml(team.name)}</span>
+                        </div>
+                        <span class="team-count">${(team.players || []).length} spillere</span>
+                    </div>
+                    <div class="team-players">
+                        ${(team.players || []).map(player => `
+                            <div class="player-chip">${escapeHtml(player.name)}</div>
+                        `).join('')}
+                        ${(team.players || []).length === 0 ? '<div class="empty-team">Ingen spillere</div>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSyncStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            if (window.syncManager) {
+                const status = window.syncManager.getStatus();
+                
+                if (status.initialized && status.hasSupabase && status.online) {
+                    statusIndicator.textContent = '☁️';
+                    statusText.textContent = 'Synced';
+                    syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
+                } else {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Local only';
+                    syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+                }
+            } else {
+                statusIndicator.textContent = '📱';
+                statusText.textContent = 'Local only';
+                syncStatus.style.background = 'rgba(102, 102, 102, 0.3)';
+            }
+        }
+
+        function showMessage(message, color) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: ${color}; color: white; padding: 12px 20px;
+                border-radius: 8px; z-index: 1000; font-weight: 500;
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            setTimeout(() => messageDiv.remove(), 3000);
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+
+    <style>
+        /* Player-specific styles */
+        .player-welcome-section {
+            margin: 20px 0;
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, #45B7D1, #4ECDC4);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(69, 183, 209, 0.3);
+        }
+
+        .player-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 5px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px 10px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            background: #45B7D1;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .quick-games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-game-btn {
+            padding: 20px 15px;
+            border: 2px solid #4ECDC4;
+            border-radius: 12px;
+            background: white;
+            color: #4ECDC4;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-game-btn:hover {
+            background: #4ECDC4;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .games-filter {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            border-color: #45B7D1;
+            background: #45B7D1;
+            color: white;
+        }
+
+        .recent-game-item,
+        .game-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #4ECDC4;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .game-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .game-status {
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #f0f0f0;
+        }
+
+        .game-result {
+            color: #666;
+            margin: 8px 0;
+        }
+
+        .game-time {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .game-added-by {
+            font-size: 0.8rem;
+            color: #999;
+            font-style: italic;
+        }
+
+        .team-overview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-color-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .team-name {
+            font-weight: bold;
+        }
+
+        .team-count {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .team-players {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .player-chip {
+            background: #f0f8ff;
+            color: #45B7D1;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            border: 1px solid #e0f0ff;
+        }
+
+        .empty-team {
+            color: #999;
+            font-style: italic;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #45B7D1;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(69, 183, 209, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .refresh-btn:hover {
+            background: #4ECDC4;
+            transform: scale(1.1);
+        }
+
+        .no-teams,
+        .no-games,
+        .no-recent {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #ddd;
+        }
+
+        /* Team colors */
+        .team-1-color { background: #FF6B6B; }
+        .team-2-color { background: #4ECDC4; }
+        .team-3-color { background: #45B7D1; }
+        .team-4-color { background: #96CEB4; }
+        .team-5-color { background: #FFEAA7; }
+        .team-6-color { background: #DDA0DD; }
+        .team-7-color { background: #98D8C8; }
+        .team-8-color { background: #F7DC6F; }
+        .team-9-color { background: #BB8FCE; }
+        .team-10-color { background: #85C1E9; }
+        .team-11-color { background: #F8C471; }
+        .team-12-color { background: #82E0AA; }
+
+        /* Modal styles (same as host) */
+        .results-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .results-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            justify-content: flex-end;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .winner-card {
+            margin: 15px 0;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .place-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .place-medal {
+            font-size: 24px;
+        }
+
+        .team-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .team-btn {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .team-btn:hover {
+            border-color: #45B7D1;
+            background: #f0f8ff;
+        }
+
+        .team-btn.selected {
+            border-color: #45B7D1;
+            background: #45B7D1;
+            color: white;
+        }
+
+        .team-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: #45B7D1;
+            color: white;
+        }
+
+        .modal-btn.primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                text-align: left;
+            }
+
+            .quick-games-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .player-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</body>
+</html>
