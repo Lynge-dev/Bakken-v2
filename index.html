@@ -11,145 +11,241 @@
         <!-- Header -->
         <header class="app-header">
             <h1 class="app-title">🏈 Håndæg og Håndbajere</h1>
-            <p class="app-subtitle">Vælg Din Rolle</p>
+            <p class="app-subtitle">Vælg Din Rolle i Turneringen</p>
         </header>
 
         <!-- Role Selection -->
-        <section class="role-selection-section">
-            <div class="role-cards">
+        <section class="role-selection">
+            <div class="grid grid-2">
                 <div class="role-card host-card" onclick="selectRole('host')">
                     <div class="role-icon">👑</div>
-                    <h2>HOST</h2>
-                    <p>Opret og administrer turneringen</p>
+                    <h2 class="role-title">HOST</h2>
+                    <p class="role-description">Opret og administrer hele turneringen</p>
+                    
                     <ul class="role-features">
-                        <li>✅ Tilføj spillere</li>
-                        <li>✅ Opret hold</li>
-                        <li>✅ Administrer spil</li>
-                        <li>✅ Tag billeder</li>
-                        <li>✅ Fuld kontrol</li>
+                        <li>✅ Tilføj og administrer spillere</li>
+                        <li>✅ Opret hold manuelt</li>
+                        <li>✅ Administrer alle spil</li>
+                        <li>✅ Tag og administrer billeder</li>
+                        <li>✅ Fuld kontrol over turnering</li>
+                        <li>✅ Generer spiller links</li>
                     </ul>
-                    <button class="role-btn host-btn">Start som Host</button>
+                    
+                    <button class="btn btn-primary btn-lg role-btn">
+                        👑 Start som Host
+                    </button>
                 </div>
 
                 <div class="role-card player-card" onclick="selectRole('player')">
                     <div class="role-icon">🎮</div>
-                    <h2>SPILLER</h2>
-                    <p>Deltag i turneringen</p>
+                    <h2 class="role-title">SPILLER</h2>
+                    <p class="role-description">Deltag og følg turneringen live</p>
+                    
                     <ul class="role-features">
-                        <li>✅ Se stilling</li>
+                        <li>✅ Se live stilling</li>
                         <li>✅ Tilføj spil resultater</li>
-                        <li>✅ Følg med i spil</li>
+                        <li>✅ Følg alle spil</li>
                         <li>✅ Se hold oversigt</li>
                         <li>✅ Real-time opdateringer</li>
+                        <li>✅ Hurtige spil shortcuts</li>
                     </ul>
-                    <button class="role-btn player-btn">Tilslut som Spiller</button>
+                    
+                    <button class="btn btn-secondary btn-lg role-btn">
+                        🎮 Tilslut som Spiller
+                    </button>
                 </div>
             </div>
         </section>
 
-        <!-- Info Section -->
-        <section class="info-section">
-            <div class="info-card">
-                <h3>🏆 Sådan fungerer det</h3>
-                <div class="info-steps">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h4>Host starter</h4>
-                            <p>Én person vælger "HOST" og opretter turneringen</p>
-                        </div>
+        <!-- How It Works -->
+        <section class="how-it-works card">
+            <h3 class="section-title">🏆 Sådan fungerer det</h3>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Host starter turneringen</h4>
+                        <p>Én person vælger "HOST" og opretter spillere og hold</p>
                     </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h4>Spillere tilslutter</h4>
-                            <p>Andre vælger "SPILLER" og kan følge med og tilføje resultater</p>
-                        </div>
+                </div>
+                
+                <div class="step-arrow">→</div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Spillere tilslutter sig</h4>
+                        <p>Andre vælger "SPILLER" og kan følge med og tilføje resultater</p>
                     </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h4>Spil sammen</h4>
-                            <p>Alle kan tilføje spil resultater og følge stillingen live</p>
-                        </div>
+                </div>
+                
+                <div class="step-arrow">→</div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Spil sammen</h4>
+                        <p>Alle kan tilføje spil resultater og følge stillingen live</p>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Features Overview -->
+        <section class="features-overview card">
+            <h3 class="section-title">⚡ Funktioner</h3>
+            <div class="grid grid-3">
+                <div class="feature-item">
+                    <div class="feature-icon">☁️</div>
+                    <h4>Cloud Sync</h4>
+                    <p>Automatisk synkronisering mellem alle enheder</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <h4>Mobil Venlig</h4>
+                    <p>Fungerer perfekt på telefon, tablet og computer</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🏆</div>
+                    <h4>Point System</h4>
+                    <p>1. plads = 2 point, 2. plads = 1 point, 3. plads = 0 point</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🎮</div>
+                    <h4>Ubegrænset Spil</h4>
+                    <p>Tilføj så mange spil som I vil under turneringen</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">📸</div>
+                    <h4>Billede Galleri</h4>
+                    <p>Tag og del billeder fra turneringen</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <h4>Real-time</h4>
+                    <p>Se opdateringer øjeblikkeligt på alle enheder</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>🏈 Håndæg og Håndbajere - Turnerings System</p>
+            <p class="footer-subtitle">Opret mindeværdige turneringer med venner og familie</p>
+        </footer>
     </div>
 
     <script>
         function selectRole(role) {
-            if (role === 'host') {
-                window.location.href = 'host.html';
-            } else if (role === 'player') {
-                window.location.href = 'player.html';
-            }
+            // Add loading state
+            const card = document.querySelector(`.${role}-card`);
+            const btn = card.querySelector('.role-btn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '🔄 Indlæser...';
+            btn.disabled = true;
+            card.style.opacity = '0.7';
+            
+            // Simulate loading and redirect
+            setTimeout(() => {
+                if (role === 'host') {
+                    window.location.href = 'host.html';
+                } else if (role === 'player') {
+                    window.location.href = 'player.html';
+                }
+            }, 500);
         }
+
+        // Add hover effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleCards = document.querySelectorAll('.role-card');
+            
+            roleCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
     </script>
 
     <style>
-        .role-selection-section {
+        /* Landing page specific styles */
+        .role-selection {
             margin: 40px 0;
         }
 
-        .role-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            max-width: 800px;
-            margin: 0 auto;
+        .role-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
-        .role-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
             transition: all 0.3s ease;
-            cursor: pointer;
-            border: 3px solid transparent;
+        }
+
+        .host-card::before {
+            background: linear-gradient(90deg, #FFB366, #FF9A42);
+        }
+
+        .player-card::before {
+            background: linear-gradient(90deg, #45B7D1, #4ECDC4);
         }
 
         .role-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
-        }
-
-        .host-card {
-            border-color: #FFB366;
+            border-color: rgba(255, 179, 102, 0.3);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
         }
 
         .host-card:hover {
-            border-color: #FF9A42;
-            background: linear-gradient(135deg, #FFF8F0, #FFFFFF);
-        }
-
-        .player-card {
-            border-color: #45B7D1;
+            background: linear-gradient(135deg, rgba(255, 248, 240, 0.95), rgba(255, 255, 255, 0.95));
         }
 
         .player-card:hover {
-            border-color: #4ECDC4;
-            background: linear-gradient(135deg, #F0F8FF, #FFFFFF);
+            background: linear-gradient(135deg, rgba(240, 248, 255, 0.95), rgba(255, 255, 255, 0.95));
         }
 
         .role-icon {
             font-size: 4rem;
             margin-bottom: 20px;
+            animation: bounce 2s infinite;
         }
 
-        .role-card h2 {
-            font-size: 2rem;
+        .role-title {
+            font-size: 2.2rem;
+            font-weight: 800;
             margin: 0 0 15px 0;
             color: #333;
         }
 
-        .role-card p {
-            font-size: 1.1rem;
+        .role-description {
+            font-size: 1.2rem;
             color: #666;
             margin-bottom: 25px;
+            font-weight: 500;
         }
 
         .role-features {
@@ -160,103 +256,132 @@
         }
 
         .role-features li {
-            padding: 8px 0;
+            padding: 10px 0;
             color: #555;
             font-weight: 500;
+            font-size: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .role-features li:last-child {
+            border-bottom: none;
         }
 
         .role-btn {
             width: 100%;
-            padding: 15px 25px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
+            margin-top: 25px;
+            font-size: 1.2rem;
+            padding: 16px 32px;
         }
 
-        .host-btn {
-            background: #FFB366;
-            color: white;
+        .how-it-works {
+            margin: 50px 0;
         }
 
-        .host-btn:hover {
-            background: #FF9A42;
-            transform: scale(1.05);
-        }
-
-        .player-btn {
-            background: #45B7D1;
-            color: white;
-        }
-
-        .player-btn:hover {
-            background: #4ECDC4;
-            transform: scale(1.05);
-        }
-
-        .info-section {
-            margin: 60px 0;
-        }
-
-        .info-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .info-card h3 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
-        }
-
-        .info-steps {
+        .steps-container {
             display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .step {
-            display: flex;
-            align-items: flex-start;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
             gap: 20px;
         }
 
+        .step {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+
         .step-number {
-            background: #4ECDC4;
+            background: linear-gradient(135deg, #4ECDC4, #45B7D1);
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            flex-shrink: 0;
+            font-size: 1.3rem;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
         }
 
         .step-content h4 {
-            margin: 0 0 8px 0;
+            margin: 0 0 10px 0;
             color: #333;
+            font-size: 1.1rem;
         }
 
         .step-content p {
             margin: 0;
             color: #666;
+            line-height: 1.5;
         }
 
-        @media (max-width: 768px) {
-            .role-cards {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
+        .step-arrow {
+            font-size: 2rem;
+            color: #4ECDC4;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
 
+        .features-overview {
+            margin: 50px 0;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(78, 205, 196, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-item h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .feature-item p {
+            margin: 0;
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .app-footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border-top: 3px solid #4ECDC4;
+        }
+
+        .app-footer p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .footer-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
             .role-card {
                 padding: 25px;
             }
@@ -265,10 +390,45 @@
                 font-size: 3rem;
             }
 
-            .step {
+            .role-title {
+                font-size: 1.8rem;
+            }
+
+            .role-description {
+                font-size: 1rem;
+            }
+
+            .steps-container {
                 flex-direction: column;
+            }
+
+            .step-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+
+            .step {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .role-features {
                 text-align: center;
-                gap: 15px;
+            }
+
+            .role-features li {
+                font-size: 0.9rem;
+                padding: 8px 0;
+            }
+
+            .feature-item {
+                padding: 15px;
+            }
+
+            .feature-icon {
+                font-size: 2rem;
             }
         }
     </style>

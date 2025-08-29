@@ -13,147 +13,270 @@
         <!-- Header -->
         <header class="app-header">
             <h1 class="app-title">🎮 Håndæg og Håndbajere - SPILLER</h1>
-            <p class="app-subtitle">Deltag i Turneringen</p>
+            <p class="app-subtitle">Deltag i Turneringen Live</p>
             <div class="sync-status" id="syncStatus">
                 <span class="status-indicator" id="statusIndicator">🔄</span>
                 <span class="status-text" id="statusText">Connecting...</span>
             </div>
         </header>
 
-        <!-- Player Welcome Section -->
-        <section class="player-welcome-section">
-            <div class="welcome-card">
-                <h3>🎮 Velkommen Spiller!</h3>
-                <p>Her kan du se turneringens status, tilføje spil resultater og følge med i stillingen.</p>
-                <div class="player-info" id="playerInfo">
-                    <div class="info-item">
-                        <span class="info-label">📊 Status:</span>
-                        <span class="info-value" id="tournamentStatus">Indlæser...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">👥 Spillere:</span>
-                        <span class="info-value" id="playerCountInfo">0</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🏆 Hold:</span>
-                        <span class="info-value" id="teamCountInfo">0</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🎮 Spil:</span>
-                        <span class="info-value" id="gameCountInfo">0</span>
-                    </div>
+        <!-- Player Welcome Panel -->
+        <section class="player-panel card">
+            <h3 class="section-title">🎮 Spiller Dashboard</h3>
+            <div class="tournament-overview grid grid-4">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="tournamentStatus">Indlæser...</div>
+                    <div class="stat-label">Status</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="playerCountInfo">0</div>
+                    <div class="stat-label">Spillere</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value" id="teamCountInfo">0</div>
+                    <div class="stat-label">Hold</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-value" id="gameCountInfo">0</div>
+                    <div class="stat-label">Spil</div>
+                </div>
+            </div>
+            
+            <div class="player-actions">
+                <button onclick="refreshData()" class="btn btn-secondary btn-sm">
+                    🔄 Opdater Data
+                </button>
+                <button onclick="showPlayerHelp()" class="btn btn-outline btn-sm">
+                    ❓ Hjælp
+                </button>
             </div>
         </section>
 
         <!-- Navigation Tabs -->
-        <section class="tabs-section">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('standings')">🏆 Stilling</button>
-                <button class="tab-btn" onclick="showTab('addgame')">➕ Tilføj Spil</button>
-                <button class="tab-btn" onclick="showTab('games')">🎮 Alle Spil</button>
-                <button class="tab-btn" onclick="showTab('teams')">👥 Hold</button>
-            </div>
+        <section class="tabs">
+            <button class="tab-btn active" onclick="showTab('standings')">🏆 Stilling</button>
+            <button class="tab-btn" onclick="showTab('addgame')">➕ Tilføj Spil</button>
+            <button class="tab-btn" onclick="showTab('games')">🎮 Alle Spil</button>
+            <button class="tab-btn" onclick="showTab('teams')">👥 Hold</button>
         </section>
 
         <!-- Standings Tab -->
         <div id="standingsTab" class="tab-content active">
-            <section class="standings-section">
+            <!-- Current Standings -->
+            <section class="card">
                 <h2 class="section-title">🏆 Aktuel Stilling</h2>
-                <div class="standings-grid" id="standingsGrid">
-                    <div class="loading-standings">Indlæser stilling...</div>
+                <div class="standings" id="standingsGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🏆</div>
+                        <h4>Indlæser stilling...</h4>
+                        <p>Vent mens data hentes</p>
+                    </div>
                 </div>
             </section>
 
-            <section class="recent-games-section">
+            <!-- Recent Games -->
+            <section class="card">
                 <h2 class="section-title">🎮 Seneste Spil</h2>
                 <div class="recent-games" id="recentGames">
-                    <div class="no-recent">Ingen spil endnu</div>
+                    <div class="empty-state">
+                        <div class="empty-icon">🎮</div>
+                        <h4>Ingen seneste spil</h4>
+                        <p>Spil vil vises her når de er afsluttet</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tournament Progress -->
+            <section class="card">
+                <h2 class="section-title">📈 Turnerings Fremgang</h2>
+                <div class="progress-overview" id="progressOverview">
+                    <div class="progress-item">
+                        <div class="progress-label">Spillere tilføjet</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="playersProgress"></div>
+                        </div>
+                        <div class="progress-text" id="playersProgressText">0 spillere</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">Hold oprettet</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="teamsProgress"></div>
+                        </div>
+                        <div class="progress-text" id="teamsProgressText">0 hold</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">Spil afsluttet</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="gamesProgress"></div>
+                        </div>
+                        <div class="progress-text" id="gamesProgressText">0 spil</div>
+                    </div>
                 </div>
             </section>
         </div>
 
         <!-- Add Game Tab -->
         <div id="addgameTab" class="tab-content">
-            <section class="add-game-section">
+            <!-- Add New Game -->
+            <section class="card">
                 <h2 class="section-title">➕ Tilføj Nyt Spil</h2>
-                <div class="add-game-card">
+                
+                <div class="add-game-form">
                     <div class="input-group">
                         <input type="text" 
                                id="gameNameInput" 
+                               class="form-input"
                                placeholder="Indtast spil navn (f.eks. 'Fodbold', 'Løb', 'Quiz')" 
                                maxlength="50">
-                        <button id="addGameBtn" class="add-game-btn" disabled>
+                        <button id="addGameBtn" class="btn btn-primary" disabled>
                             ➕ Tilføj & Indtast Resultat
                         </button>
                     </div>
-                    <div class="add-game-hint">
-                        <small>Tilføj spil og indtast resultater med det samme</small>
-                    </div>
+                    <p class="help-text">Tilføj et nyt spil og indtast resultater med det samme</p>
                 </div>
             </section>
 
-            <section class="quick-games-section">
+            <!-- Quick Games -->
+            <section class="card">
                 <h2 class="section-title">⚡ Hurtige Spil</h2>
                 <div class="quick-games-grid">
-                    <button class="quick-game-btn" onclick="addQuickGame('Fodbold')">⚽ Fodbold</button>
-                    <button class="quick-game-btn" onclick="addQuickGame('Løb')">🏃 Løb</button>
-                    <button class="quick-game-btn" onclick="addQuickGame('Quiz')">🧠 Quiz</button>
-                    <button class="quick-game-btn" onclick="addQuickGame('Kast')">🎯 Kast</button>
-                    <button class="quick-game-btn" onclick="addQuickGame('Balance')">⚖️ Balance</button>
-                    <button class="quick-game-btn" onclick="addQuickGame('Styrke')">💪 Styrke</button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Fodbold')">
+                        <div class="quick-game-icon">⚽</div>
+                        <div class="quick-game-name">Fodbold</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Løb')">
+                        <div class="quick-game-icon">🏃</div>
+                        <div class="quick-game-name">Løb</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Quiz')">
+                        <div class="quick-game-icon">🧠</div>
+                        <div class="quick-game-name">Quiz</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Kast')">
+                        <div class="quick-game-icon">🎯</div>
+                        <div class="quick-game-name">Kast</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Balance')">
+                        <div class="quick-game-icon">⚖️</div>
+                        <div class="quick-game-name">Balance</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Styrke')">
+                        <div class="quick-game-icon">💪</div>
+                        <div class="quick-game-name">Styrke</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Hurtighed')">
+                        <div class="quick-game-icon">⚡</div>
+                        <div class="quick-game-name">Hurtighed</div>
+                    </button>
+                    <button class="quick-game-btn" onclick="addQuickGame('Præcision')">
+                        <div class="quick-game-icon">🎪</div>
+                        <div class="quick-game-name">Præcision</div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Game Rules -->
+            <section class="card">
+                <h2 class="section-title">📋 Point System</h2>
+                <div class="rules-grid">
+                    <div class="rule-item">
+                        <div class="rule-medal">🥇</div>
+                        <div class="rule-text">
+                            <strong>1. Plads</strong>
+                            <span>2 point</span>
+                        </div>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-medal">🥈</div>
+                        <div class="rule-text">
+                            <strong>2. Plads</strong>
+                            <span>1 point</span>
+                        </div>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-medal">🥉</div>
+                        <div class="rule-text">
+                            <strong>3. Plads</strong>
+                            <span>0 point</span>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
 
         <!-- All Games Tab -->
         <div id="gamesTab" class="tab-content">
-            <section class="all-games-section">
+            <section class="card">
                 <h2 class="section-title">🎮 Alle Spil</h2>
-                <div class="games-filter">
-                    <button class="filter-btn active" onclick="filterGames('all')">Alle</button>
-                    <button class="filter-btn" onclick="filterGames('completed')">Afsluttede</button>
-                    <button class="filter-btn" onclick="filterGames('recent')">Seneste</button>
+                
+                <!-- Game Filters -->
+                <div class="game-filters">
+                    <button class="filter-btn active" onclick="filterGames('all')">
+                        Alle Spil
+                    </button>
+                    <button class="filter-btn" onclick="filterGames('completed')">
+                        Afsluttede
+                    </button>
+                    <button class="filter-btn" onclick="filterGames('recent')">
+                        Seneste 5
+                    </button>
                 </div>
-                <div class="all-games-list" id="allGamesList">
-                    <div class="no-games">Ingen spil endnu</div>
+
+                <!-- Games List -->
+                <div class="games-list" id="allGamesList">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎮</div>
+                        <h4>Ingen spil endnu</h4>
+                        <p>Spil vil vises her når de tilføjes</p>
+                    </div>
                 </div>
             </section>
         </div>
 
         <!-- Teams Tab -->
         <div id="teamsTab" class="tab-content">
-            <section class="teams-overview-section">
+            <section class="card">
                 <h2 class="section-title">👥 Hold Oversigt</h2>
                 <div class="teams-overview" id="teamsOverview">
-                    <div class="no-teams">Ingen hold oprettet endnu</div>
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h4>Ingen hold oprettet endnu</h4>
+                        <p>Vent på host opretter hold</p>
+                    </div>
                 </div>
             </section>
-        </div>
 
-        <!-- Refresh Button -->
-        <button onclick="refreshData()" class="refresh-btn" title="Opdater data">
-            🔄
-        </button>
+            <!-- Team Statistics -->
+            <section class="card" id="teamStatsSection" style="display: none;">
+                <h2 class="section-title">📊 Hold Statistik</h2>
+                <div class="team-stats" id="teamStats"></div>
+            </section>
+        </div>
     </div>
 
     <!-- Results Modal -->
-    <div class="results-modal" id="resultsModal">
-        <div class="modal-backdrop" onclick="closeResultsModal()"></div>
+    <div class="modal" id="resultsModal">
+        <div class="modal-backdrop"></div>
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalGameTitle">🎯 Indtast Resultater</h2>
-                <button class="close-btn" onclick="closeResultsModal()">&times;</button>
+                <button class="modal-close" onclick="closeResultsModal()">&times;</button>
             </div>
             
             <div class="modal-body">
                 <div class="game-info">
                     <h3 id="modalGameName">Spil Navn</h3>
-                    <p class="scoring-info">🏆 Point System: 1. plads = 2 point, 2. plads = 1 point, 3. plads = 0 point</p>
+                    <div class="scoring-info">
+                        🏆 <strong>Point System:</strong> 1. plads = 2 point, 2. plads = 1 point, 3. plads = 0 point
+                    </div>
                 </div>
                 
                 <div class="winner-selection">
-                    <div class="winner-card">
+                    <div class="winner-section">
                         <div class="place-header">
                             <span class="place-medal">🥇</span>
                             <h4>1. Plads (2 point)</h4>
@@ -161,7 +284,7 @@
                         <div class="team-buttons" id="firstPlaceButtons"></div>
                     </div>
 
-                    <div class="winner-card">
+                    <div class="winner-section">
                         <div class="place-header">
                             <span class="place-medal">🥈</span>
                             <h4>2. Plads (1 point)</h4>
@@ -169,7 +292,7 @@
                         <div class="team-buttons" id="secondPlaceButtons"></div>
                     </div>
 
-                    <div class="winner-card" id="thirdPlaceCard">
+                    <div class="winner-section" id="thirdPlaceSection">
                         <div class="place-header">
                             <span class="place-medal">🥉</span>
                             <h4>3. Plads (0 point)</h4>
@@ -180,24 +303,87 @@
             </div>
 
             <div class="modal-footer">
-                <button id="saveResultBtn" class="modal-btn primary" disabled>
+                <button id="saveResultBtn" class="btn btn-success" disabled>
                     💾 Gem Resultat
                 </button>
-                <button id="cancelResultBtn" class="modal-btn secondary" onclick="closeResultsModal()">
+                <button class="btn btn-outline" onclick="closeResultsModal()">
                     ❌ Annuller
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>❓ Spiller Hjælp</h2>
+                <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>🎮 Som Spiller kan du:</h3>
+                    <ul class="help-list">
+                        <li>✅ Se live stilling og følge turneringen</li>
+                        <li>✅ Tilføje nye spil og indtaste resultater</li>
+                        <li>✅ Bruge hurtige spil shortcuts</li>
+                        <li>✅ Se alle afsluttede spil og resultater</li>
+                        <li>✅ Følge hold oversigt og spillere</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3>📋 Point System:</h3>
+                    <div class="help-points">
+                        <div class="help-point">🥇 1. plads = <strong>2 point</strong></div>
+                        <div class="help-point">🥈 2. plads = <strong>1 point</strong></div>
+                        <div class="help-point">🥉 3. plads = <strong>0 point</strong></div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h3>🔄 Opdateringer:</h3>
+                    <p>Data opdateres automatisk hver 30. sekund. Brug "Opdater Data" knappen for manuel opdatering.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeHelpModal()">
+                    👍 Forstået
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Opdaterer...</h3>
+            <p id="loadingText">Henter seneste data</p>
+        </div>
+    </div>
+
+    <!-- Auto-refresh indicator -->
+    <div id="refreshIndicator" class="refresh-indicator hidden">
+        <div class="refresh-content">
+            <div class="refresh-spinner"></div>
+            <span>Opdaterer...</span>
+        </div>
+    </div>
+
     <script>
-        // Player interface - View tournament and add game results
+        // Player interface - Enhanced with new style system
         let players = [];
         let teams = [];
         let games = [];
         let currentGame = null;
         let selectedResults = { first: null, second: null, third: null };
         let currentFilter = 'all';
+        let autoRefreshInterval = null;
+        let lastUpdateTime = 0;
 
         // DOM elements
         const gameNameInput = document.getElementById('gameNameInput');
@@ -206,67 +392,90 @@
         const recentGames = document.getElementById('recentGames');
         const allGamesList = document.getElementById('allGamesList');
         const teamsOverview = document.getElementById('teamsOverview');
+        const teamStatsSection = document.getElementById('teamStatsSection');
+        const teamStats = document.getElementById('teamStats');
         
         const resultsModal = document.getElementById('resultsModal');
+        const helpModal = document.getElementById('helpModal');
         const modalGameName = document.getElementById('modalGameName');
         const firstPlaceButtons = document.getElementById('firstPlaceButtons');
         const secondPlaceButtons = document.getElementById('secondPlaceButtons');
         const thirdPlaceButtons = document.getElementById('thirdPlaceButtons');
-        const thirdPlaceCard = document.getElementById('thirdPlaceCard');
+        const thirdPlaceSection = document.getElementById('thirdPlaceSection');
         const saveResultBtn = document.getElementById('saveResultBtn');
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const refreshIndicator = document.getElementById('refreshIndicator');
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎮 Player interface starting...');
+            showLoading('Starter spiller interface...');
             
             // Force player role
             localStorage.setItem('bakken-user-role', 'player');
             
-            loadAllData();
-            setupEventListeners();
-            updateAllUI();
-            updateSyncStatus();
-            
-            // Auto-refresh every 30 seconds
-            setInterval(refreshData, 30000);
+            setTimeout(() => {
+                loadAllData();
+                setupEventListeners();
+                updateAllUI();
+                updateSyncStatus();
+                startAutoRefresh();
+                hideLoading();
+                
+                // Show welcome message
+                setTimeout(() => {
+                    showMessage('🎮 Velkommen til turneringen! Du kan nu tilføje spil og følge stillingen.', 'success');
+                }, 1000);
+            }, 1500);
         });
 
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            loadingOverlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.add('hidden');
+        }
+
+        function showRefreshIndicator() {
+            refreshIndicator.classList.remove('hidden');
+            setTimeout(() => {
+                refreshIndicator.classList.add('hidden');
+            }, 2000);
+        }
+
         function loadAllData() {
-            // Load players
             try {
+                // Load players
                 const playersData = localStorage.getItem('bakken-players');
                 players = playersData ? JSON.parse(playersData) : [];
-            } catch (e) {
-                players = [];
-            }
 
-            // Load teams
-            try {
+                // Load teams
                 const teamsData = localStorage.getItem('bakken-teams');
                 if (teamsData) {
                     const parsed = JSON.parse(teamsData);
                     teams = parsed.teams || [];
                 }
-            } catch (e) {
-                teams = [];
-            }
 
-            // Load games
-            try {
+                // Load games
                 const gamesData = localStorage.getItem('bakken-games');
                 if (gamesData) {
                     const parsed = JSON.parse(gamesData);
                     games = parsed.games || [];
                 }
-            } catch (e) {
-                games = [];
-            }
 
-            console.log('📥 Player loaded data:', {
-                players: players.length,
-                teams: teams.length,
-                games: games.length
-            });
+                lastUpdateTime = Date.now();
+                console.log('📥 Player loaded data:', {
+                    players: players.length,
+                    teams: teams.length,
+                    games: games.length
+                });
+            } catch (e) {
+                console.error('❌ Load failed:', e);
+                showMessage('⚠️ Fejl ved indlæsning af data', 'error');
+            }
         }
 
         function setupEventListeners() {
@@ -287,6 +496,25 @@
                 }
             });
 
+            // Help modal
+            helpModal.addEventListener('click', function(e) {
+                if (e.target === helpModal || e.target.classList.contains('modal-backdrop')) {
+                    closeHelpModal();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeResultsModal();
+                    closeHelpModal();
+                }
+                if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                    e.preventDefault();
+                    refreshData();
+                }
+            });
+
             // Sync events
             setInterval(updateSyncStatus, 3000);
             
@@ -295,26 +523,49 @@
                 console.log('🔄 Data updated:', event.detail);
                 refreshData();
             });
+
+            // Page visibility change
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    // Page became visible, refresh data
+                    refreshData();
+                }
+            });
+        }
+
+        function startAutoRefresh() {
+            // Auto-refresh every 30 seconds
+            autoRefreshInterval = setInterval(() => {
+                if (!document.hidden) {
+                    refreshData(true); // Silent refresh
+                }
+            }, 30000);
         }
 
         // Tab Management
         function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-
-            document.getElementById(tabName + 'Tab').classList.add('active');
             event.target.classList.add('active');
 
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Update UI for current tab
             updateAllUI();
         }
 
         // Data Refresh
-        async function refreshData() {
-            console.log('🔄 Refreshing player data...');
+        async function refreshData(silent = false) {
+            if (!silent) {
+                showRefreshIndicator();
+                console.log('🔄 Refreshing player data...');
+            }
             
             try {
                 if (window.syncManager && window.syncManager.loadFromCloud) {
@@ -360,12 +611,18 @@
                         
                         if (updated) {
                             updateAllUI();
-                            showMessage('🔄 Data opdateret', '#4ECDC4');
+                            lastUpdateTime = Date.now();
+                            if (!silent) {
+                                showMessage('🔄 Data opdateret fra cloud', 'success');
+                            }
                         }
                     }
                 }
             } catch (error) {
                 console.error('❌ Refresh failed:', error);
+                if (!silent) {
+                    showMessage('⚠️ Kunne ikke opdatere data', 'warning');
+                }
             }
         }
 
@@ -374,17 +631,17 @@
             const gameName = gameNameInput.value.trim();
             
             if (gameName === '') {
-                showMessage('⚠️ Indtast et spil navn', '#FF9A42');
+                showMessage('⚠️ Indtast et spil navn', 'warning');
                 return;
             }
             
             if (teams.length < 2) {
-                showMessage('⚠️ Minimum 2 hold krævet. Vent på host opretter hold.', '#FF9A42');
+                showMessage('⚠️ Minimum 2 hold krævet. Vent på host opretter hold.', 'warning');
                 return;
             }
             
             if (games.some(game => game.name.toLowerCase() === gameName.toLowerCase())) {
-                showMessage('⚠️ Dette spil findes allerede', '#FF9A42');
+                showMessage('⚠️ Dette spil findes allerede', 'warning');
                 return;
             }
             
@@ -404,17 +661,17 @@
             addGameBtn.disabled = true;
             
             openResultsPopup();
-            showMessage(`✅ "${gameName}" tilføjet - indtast resultater`, '#4ECDC4');
+            showMessage(`✅ "${gameName}" tilføjet - indtast resultater`, 'success');
         }
 
         function addQuickGame(gameName) {
             if (teams.length < 2) {
-                showMessage('⚠️ Minimum 2 hold krævet. Vent på host opretter hold.', '#FF9A42');
+                showMessage('⚠️ Minimum 2 hold krævet. Vent på host opretter hold.', 'warning');
                 return;
             }
             
             if (games.some(game => game.name.toLowerCase() === gameName.toLowerCase())) {
-                showMessage('⚠️ Dette spil findes allerede', '#FF9A42');
+                showMessage('⚠️ Dette spil findes allerede', 'warning');
                 return;
             }
             
@@ -431,7 +688,7 @@
             currentGame = newGame;
             
             openResultsPopup();
-            showMessage(`⚡ "${gameName}" tilføjet - indtast resultater`, '#4ECDC4');
+            showMessage(`⚡ "${gameName}" tilføjet - indtast resultater`, 'success');
         }
 
         function openResultsPopup() {
@@ -443,9 +700,9 @@
             generateTeamButtons();
             
             if (teams.length === 2) {
-                thirdPlaceCard.style.display = 'none';
+                thirdPlaceSection.style.display = 'none';
             } else {
-                thirdPlaceCard.style.display = 'block';
+                thirdPlaceSection.style.display = 'block';
             }
             
             resultsModal.classList.add('active');
@@ -468,14 +725,14 @@
 
         function generateTeamButtons() {
             const buttonHTML = teams.map(team => `
-                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'first')">
+                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace('${team.id}', 'first')">
                     ${escapeHtml(team.name)} (${team.players.length} spillere)
                 </button>
             `).join('');
             firstPlaceButtons.innerHTML = buttonHTML;
             
             const buttonHTML2 = teams.map(team => `
-                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'second')">
+                <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace('${team.id}', 'second')">
                     ${escapeHtml(team.name)} (${team.players.length} spillere)
                 </button>
             `).join('');
@@ -483,7 +740,7 @@
             
             if (teams.length > 2) {
                 const buttonHTML3 = teams.map(team => `
-                    <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace(${team.id}, 'third')">
+                    <button class="team-btn" data-team-id="${team.id}" onclick="selectTeamForPlace('${team.id}', 'third')">
                         ${escapeHtml(team.name)} (${team.players.length} spillere)
                     </button>
                 `).join('');
@@ -504,20 +761,20 @@
 
         function updateTeamButtonStates() {
             firstPlaceButtons.querySelectorAll('.team-btn').forEach(btn => {
-                const teamId = parseInt(btn.dataset.teamId);
+                const teamId = btn.dataset.teamId;
                 btn.classList.toggle('selected', selectedResults.first === teamId);
                 btn.disabled = (selectedResults.second === teamId || selectedResults.third === teamId);
             });
             
             secondPlaceButtons.querySelectorAll('.team-btn').forEach(btn => {
-                const teamId = parseInt(btn.dataset.teamId);
+                const teamId = btn.dataset.teamId;
                 btn.classList.toggle('selected', selectedResults.second === teamId);
                 btn.disabled = (selectedResults.first === teamId || selectedResults.third === teamId);
             });
             
             if (teams.length > 2) {
                 thirdPlaceButtons.querySelectorAll('.team-btn').forEach(btn => {
-                    const teamId = parseInt(btn.dataset.teamId);
+                    const teamId = btn.dataset.teamId;
                     btn.classList.toggle('selected', selectedResults.third === teamId);
                     btn.disabled = (selectedResults.first === teamId || selectedResults.second === teamId);
                 });
@@ -529,13 +786,13 @@
             
             if (teams.length === 2) {
                 if (!selectedResults.first || !selectedResults.second) {
-                    showMessage('⚠️ Vælg både 1. og 2. plads', '#FF9A42');
+                    showMessage('⚠️ Vælg både 1. og 2. plads', 'warning');
                     return;
                 }
                 selectedResults.third = null;
             } else {
                 if (!selectedResults.first || !selectedResults.second || !selectedResults.third) {
-                    showMessage('⚠️ Vælg alle tre placeringer', '#FF9A42');
+                    showMessage('⚠️ Vælg alle tre placeringer', 'warning');
                     return;
                 }
             }
@@ -591,7 +848,7 @@
             selectedResults = { first: null, second: null, third: null };
             
             updateAllUI();
-            showMessage(`✅ Resultat gemt!`, '#4ECDC4');
+            showMessage(`✅ Resultat gemt for "${currentGame ? currentGame.name : 'spillet'}"!`, 'success');
             
             gameNameInput.focus();
         }
@@ -608,6 +865,15 @@
             updateAllGamesUI();
         }
 
+        // Help Functions
+        function showPlayerHelp() {
+            helpModal.classList.add('active');
+        }
+
+        function closeHelpModal() {
+            helpModal.classList.remove('active');
+        }
+
         // Data Management
         function saveData(type) {
             try {
@@ -622,6 +888,7 @@
                 }
             } catch (e) {
                 console.error('Save failed:', e);
+                showMessage('⚠️ Fejl ved gemning', 'error');
             }
         }
 
@@ -632,6 +899,7 @@
             updateRecentGamesUI();
             updateAllGamesUI();
             updateTeamsOverviewUI();
+            updateProgressOverview();
         }
 
         function updateTournamentInfo() {
@@ -639,13 +907,37 @@
             document.getElementById('teamCountInfo').textContent = teams.length;
             document.getElementById('gameCountInfo').textContent = games.filter(g => g.status === 'completed').length;
             
-            const status = teams.length >= 2 ? 'Aktiv' : 'Venter på hold';
-            document.getElementById('tournamentStatus').textContent = status;
+            const status = teams.length >= 2 ? '✅ Aktiv' : '⚠️ Venter på hold';
+            document.getElementById('tournamentStatus').innerHTML = status;
+        }
+
+        function updateProgressOverview() {
+            // Players progress (assume max 20 players)
+            const playersPercent = Math.min((players.length / 20) * 100, 100);
+            document.getElementById('playersProgress').style.width = playersPercent + '%';
+            document.getElementById('playersProgressText').textContent = `${players.length} spillere`;
+            
+            // Teams progress (assume max 6 teams)
+            const teamsPercent = Math.min((teams.length / 6) * 100, 100);
+            document.getElementById('teamsProgress').style.width = teamsPercent + '%';
+            document.getElementById('teamsProgressText').textContent = `${teams.length} hold`;
+            
+            // Games progress (assume max 15 games)
+            const completedGames = games.filter(g => g.status === 'completed').length;
+            const gamesPercent = Math.min((completedGames / 15) * 100, 100);
+            document.getElementById('gamesProgress').style.width = gamesPercent + '%';
+            document.getElementById('gamesProgressText').textContent = `${completedGames} spil`;
         }
 
         function updateStandingsUI() {
             if (teams.length === 0) {
-                standingsGrid.innerHTML = '<div class="no-teams">Venter på host opretter hold</div>';
+                standingsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h4>Venter på hold</h4>
+                        <p>Host skal oprette hold først</p>
+                    </div>
+                `;
                 return;
             }
             
@@ -669,12 +961,13 @@
             standings.sort((a, b) => b.totalPoints - a.totalPoints);
             
             standingsGrid.innerHTML = standings.map((team, index) => `
-                <div class="team-standing ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}">
+                <div class="standing-item ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}">
                     <div class="standing-position">${index + 1}</div>
                     <div class="standing-info">
                         <div class="standing-team">${escapeHtml(team.name)}</div>
-                        <div class="standing-members">${team.players.map(p => p.name).join(', ')}</div>
-                        <div class="standing-games">Spil: ${team.gamesPlayed}</div>
+                        <div class="standing-details">
+                            ${team.players.map(p => p.name).join(', ')} • ${team.gamesPlayed} spil
+                        </div>
                     </div>
                     <div class="standing-score">${team.totalPoints}</div>
                 </div>
@@ -686,19 +979,27 @@
             const recentGamesList = completedGames.slice(-3).reverse();
             
             if (recentGamesList.length === 0) {
-                recentGames.innerHTML = '<div class="no-recent">Ingen spil endnu</div>';
+                recentGames.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎮</div>
+                        <h4>Ingen seneste spil</h4>
+                        <p>Spil vil vises her når de er afsluttet</p>
+                    </div>
+                `;
                 return;
             }
             
             recentGames.innerHTML = recentGamesList.map(game => `
-                <div class="recent-game-item">
-                    <div class="game-name">${escapeHtml(game.name)}</div>
+                <div class="game-item recent">
+                    <div class="game-header">
+                        <div class="game-name">${escapeHtml(game.name)}</div>
+                        <div class="game-time">${getTimeAgo(game.completedAt)}</div>
+                    </div>
                     <div class="game-result">
                         🥇 ${game.results[0].teamName} | 
                         🥈 ${game.results[1].teamName}
                         ${game.results.length > 2 && game.results[2] ? ` | 🥉 ${game.results[2].teamName}` : ''}
                     </div>
-                    <div class="game-time">${new Date(game.completedAt).toLocaleString()}</div>
                 </div>
             `).join('');
         }
@@ -718,7 +1019,13 @@
             }
             
             if (filteredGames.length === 0) {
-                allGamesList.innerHTML = '<div class="no-games">Ingen spil i denne kategori</div>';
+                allGamesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎮</div>
+                        <h4>Ingen spil i denne kategori</h4>
+                        <p>Spil vil vises her når de tilføjes</p>
+                    </div>
+                `;
                 return;
             }
             
@@ -726,7 +1033,9 @@
                 <div class="game-item ${game.status}">
                     <div class="game-header">
                         <div class="game-name">${escapeHtml(game.name)}</div>
-                        <div class="game-status">${game.status === 'completed' ? '✅ Afsluttet' : '⏳ Aktiv'}</div>
+                        <div class="game-status ${game.status}">
+                            ${game.status === 'completed' ? '✅ Afsluttet' : '⏳ Aktiv'}
+                        </div>
                     </div>
                     ${game.status === 'completed' && game.results ? `
                         <div class="game-result">
@@ -734,21 +1043,36 @@
                             🥈 ${game.results[1].teamName} (1 pt)
                             ${game.results.length > 2 && game.results[2] ? ` | 🥉 ${game.results[2].teamName} (0 pt)` : ''}
                         </div>
-                        <div class="game-time">${new Date(game.completedAt).toLocaleString()}</div>
-                    ` : '<div class="game-pending">Venter på resultater</div>'}
-                    ${game.addedBy ? `<div class="game-added-by">Tilføjet af: ${game.addedBy}</div>` : ''}
+                        <div class="game-meta">
+                            Afsluttet ${getTimeAgo(game.completedAt)}
+                            ${game.addedBy ? ` • Tilføjet af ${game.addedBy}` : ''}
+                        </div>
+                    ` : `
+                        <div class="game-pending">Venter på resultater</div>
+                        <div class="game-meta">
+                            Oprettet ${getTimeAgo(game.createdAt)}
+                            ${game.addedBy ? ` • Tilføjet af ${game.addedBy}` : ''}
+                        </div>
+                    `}
                 </div>
             `).join('');
         }
 
         function updateTeamsOverviewUI() {
             if (teams.length === 0) {
-                teamsOverview.innerHTML = '<div class="no-teams">Venter på host opretter hold</div>';
+                teamsOverview.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h4>Ingen hold oprettet endnu</h4>
+                        <p>Vent på host opretter hold</p>
+                    </div>
+                `;
+                teamStatsSection.style.display = 'none';
                 return;
             }
             
             teamsOverview.innerHTML = teams.map((team, index) => `
-                <div class="team-overview-card">
+                <div class="team-card">
                     <div class="team-header">
                         <div class="team-info">
                             <div class="team-color-indicator team-${(index % 12) + 1}-color"></div>
@@ -758,12 +1082,107 @@
                     </div>
                     <div class="team-players">
                         ${(team.players || []).map(player => `
-                            <div class="player-chip">${escapeHtml(player.name)}</div>
+                            <div class="chip">${escapeHtml(player.name)}</div>
                         `).join('')}
                         ${(team.players || []).length === 0 ? '<div class="empty-team">Ingen spillere</div>' : ''}
                     </div>
+                    <div class="team-stats-mini">
+                        ${getTeamStats(team.id)}
+                    </div>
                 </div>
             `).join('');
+            
+            // Show team statistics
+            updateTeamStatistics();
+            teamStatsSection.style.display = 'block';
+        }
+
+        function getTeamStats(teamId) {
+            let wins = 0;
+            let totalGames = 0;
+            let totalPoints = 0;
+            
+            games.forEach(game => {
+                if (game.status === 'completed' && game.results) {
+                    const teamResult = game.results.find(r => r.teamId === teamId);
+                    if (teamResult) {
+                        totalGames++;
+                        totalPoints += teamResult.points;
+                        if (teamResult.placement === 1) wins++;
+                    }
+                }
+            });
+            
+            return `
+                <div class="mini-stat">🏆 ${wins} sejre</div>
+                <div class="mini-stat">🎮 ${totalGames} spil</div>
+                <div class="mini-stat">⭐ ${totalPoints} point</div>
+            `;
+        }
+
+        function updateTeamStatistics() {
+            const stats = teams.map(team => {
+                let wins = 0;
+                let seconds = 0;
+                let thirds = 0;
+                let totalGames = 0;
+                let totalPoints = 0;
+                
+                games.forEach(game => {
+                    if (game.status === 'completed' && game.results) {
+                        const teamResult = game.results.find(r => r.teamId === team.id);
+                        if (teamResult) {
+                            totalGames++;
+                            totalPoints += teamResult.points;
+                            if (teamResult.placement === 1) wins++;
+                            else if (teamResult.placement === 2) seconds++;
+                            else if (teamResult.placement === 3) thirds++;
+                        }
+                    }
+                });
+                
+                return {
+                    ...team,
+                    wins,
+                    seconds,
+                    thirds,
+                    totalGames,
+                    totalPoints,
+                    winRate: totalGames > 0 ? (wins / totalGames * 100).toFixed(1) : 0
+                };
+            });
+            
+            teamStats.innerHTML = `
+                <div class="stats-grid">
+                    ${stats.map(team => `
+                        <div class="stat-card team-stat">
+                            <h4>${escapeHtml(team.name)}</h4>
+                            <div class="stat-details">
+                                <div class="stat-row">
+                                    <span>🥇 Sejre:</span>
+                                    <strong>${team.wins}</strong>
+                                </div>
+                                <div class="stat-row">
+                                    <span>🥈 Andenpladser:</span>
+                                    <strong>${team.seconds}</strong>
+                                </div>
+                                <div class="stat-row">
+                                    <span>🥉 Tredjepladser:</span>
+                                    <strong>${team.thirds}</strong>
+                                </div>
+                                <div class="stat-row">
+                                    <span>📊 Sejrsrate:</span>
+                                    <strong>${team.winRate}%</strong>
+                                </div>
+                                <div class="stat-row total">
+                                    <span>⭐ Total point:</span>
+                                    <strong>${team.totalPoints}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
         function updateSyncStatus() {
@@ -778,6 +1197,10 @@
                     statusIndicator.textContent = '☁️';
                     statusText.textContent = 'Synced';
                     syncStatus.style.background = 'rgba(78, 205, 196, 0.3)';
+                } else if (status.initialized && !status.online) {
+                    statusIndicator.textContent = '📱';
+                    statusText.textContent = 'Offline';
+                    syncStatus.style.background = 'rgba(255, 154, 66, 0.3)';
                 } else {
                     statusIndicator.textContent = '📱';
                     statusText.textContent = 'Local only';
@@ -790,16 +1213,56 @@
             }
         }
 
-        function showMessage(message, color) {
+        // Utility Functions
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (days > 0) return `${days} dag${days > 1 ? 'e' : ''} siden`;
+            if (hours > 0) return `${hours} time${hours > 1 ? 'r' : ''} siden`;
+            if (minutes > 0) return `${minutes} minut${minutes > 1 ? 'ter' : ''} siden`;
+            return 'Lige nu';
+        }
+
+        function showMessage(message, type = 'info') {
             const messageDiv = document.createElement('div');
-            messageDiv.style.cssText = `
-                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-                background: ${color}; color: white; padding: 12px 20px;
-                border-radius: 8px; z-index: 1000; font-weight: 500;
-            `;
+            messageDiv.className = `message message-${type}`;
             messageDiv.textContent = message;
+            
+            const colors = {
+                success: '#4ECDC4',
+                warning: '#FFB366',
+                error: '#FF6B6B',
+                info: '#45B7D1'
+            };
+            
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type] || colors.info};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                z-index: 2000;
+                font-weight: 500;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                animation: slideInRight 0.3s ease;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
             document.body.appendChild(messageDiv);
-            setTimeout(() => messageDiv.remove(), 3000);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.animation = 'slideInRight 0.3s ease reverse';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 4000);
         }
 
         function generateId() {
@@ -811,105 +1274,181 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
     </script>
 
     <style>
         /* Player-specific styles */
-        .player-welcome-section {
+        .player-panel {
+            background: linear-gradient(135deg, rgba(69, 183, 209, 0.1), rgba(78, 205, 196, 0.05));
+            border-left: 4px solid #45B7D1;
+        }
+
+        .tournament-overview {
             margin: 20px 0;
         }
 
-        .welcome-card {
-            background: linear-gradient(135deg, #45B7D1, #4ECDC4);
-            color: white;
-            border-radius: 15px;
+        .stat-card {
+            text-align: center;
             padding: 20px;
-            box-shadow: 0 4px 15px rgba(69, 183, 209, 0.3);
-        }
-
-        .player-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .info-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .info-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .tabs {
-            display: flex;
-            background: white;
-            border-radius: 15px;
-            padding: 5px;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px 10px;
-            border: none;
-            background: transparent;
-            border-radius: 10px;
-            font-weight: 500;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(69, 183, 209, 0.2);
             transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #45B7D1;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
             font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
         }
 
-        .tab-btn.active {
-            background: #45B7D1;
-            color: white;
+        .player-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
         }
 
-        .tab-content {
-            display: none;
+        .progress-overview {
+            margin: 20px 0;
         }
 
-        .tab-content.active {
-            display: block;
+        .progress-item {
+            margin: 15px 0;
+        }
+
+        .progress-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #45B7D1, #4ECDC4);
+            border-radius: 4px;
+            transition: width 0.8s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .add-game-form {
+            margin: 20px 0;
         }
 
         .quick-games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 15px;
-            margin-top: 20px;
+            margin: 20px 0;
         }
 
         .quick-game-btn {
-            padding: 20px 15px;
-            border: 2px solid #4ECDC4;
-            border-radius: 12px;
             background: white;
-            color: #4ECDC4;
-            font-weight: 500;
+            border: 2px solid #4ECDC4;
+            border-radius: 15px;
+            padding: 20px 15px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
         .quick-game-btn:hover {
             background: #4ECDC4;
             color: white;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.3);
         }
 
-        .games-filter {
+        .quick-game-icon {
+            font-size: 2rem;
+        }
+
+        .quick-game-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            border-left: 3px solid #4ECDC4;
+        }
+
+        .rule-medal {
+            font-size: 1.5rem;
+        }
+
+        .rule-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .rule-text strong {
+            color: #333;
+        }
+
+        .rule-text span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .game-filters {
             display: flex;
             gap: 10px;
             margin: 20px 0;
@@ -924,6 +1463,12 @@
             color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            border-color: #45B7D1;
+            color: #45B7D1;
         }
 
         .filter-btn.active {
@@ -932,138 +1477,165 @@
             color: white;
         }
 
-        .recent-game-item,
-        .game-item {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid #4ECDC4;
+        .games-list {
+            margin: 20px 0;
         }
 
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .game-item.recent {
+            border-left-color: #4ECDC4;
         }
 
-        .game-name {
-            font-weight: bold;
-            font-size: 1.1rem;
+        .game-item.completed {
+            border-left-color: #96CEB4;
         }
 
-        .game-status {
-            font-size: 0.9rem;
-            padding: 4px 8px;
-            border-radius: 12px;
-            background: #f0f0f0;
-        }
-
-        .game-result {
-            color: #666;
-            margin: 8px 0;
+        .game-item.active {
+            border-left-color: #FFB366;
         }
 
         .game-time {
             font-size: 0.8rem;
             color: #999;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 10px;
         }
 
-        .game-added-by {
-            font-size: 0.8rem;
-            color: #999;
+        .game-pending {
+            color: #FFB366;
             font-style: italic;
+            margin: 8px 0;
         }
 
-        .team-overview-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 10px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .team-stats-mini {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
         }
 
-        .team-header {
+        .mini-stat {
+            font-size: 0.8rem;
+            color: #666;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .team-stat {
+            text-align: left;
+        }
+
+        .team-stat h4 {
+            margin: 0 0 15px 0;
+            color: #333;
+            border-bottom: 2px solid #4ECDC4;
+            padding-bottom: 8px;
+        }
+
+        .stat-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            padding: 5px 0;
         }
 
-        .team-info {
+        .stat-row.total {
+            border-top: 1px solid #eee;
+            margin-top: 8px;
+            padding-top: 12px;
+            font-weight: 600;
+        }
+
+        .empty-team {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .help-section {
+            margin: 20px 0;
+        }
+
+        .help-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+
+        .help-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .help-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .help-list li:last-child {
+            border-bottom: none;
+        }
+
+        .help-points {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .help-point {
             display: flex;
             align-items: center;
             gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(69, 183, 209, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .refresh-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
         .team-color-indicator {
             width: 12px;
             height: 12px;
             border-radius: 50%;
-        }
-
-        .team-name {
-            font-weight: bold;
-        }
-
-        .team-count {
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .team-players {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .player-chip {
-            background: #f0f8ff;
-            color: #45B7D1;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            border: 1px solid #e0f0ff;
-        }
-
-        .empty-team {
-            color: #999;
-            font-style: italic;
-        }
-
-        .refresh-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #45B7D1;
-            color: white;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(69, 183, 209, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .refresh-btn:hover {
-            background: #4ECDC4;
-            transform: scale(1.1);
-        }
-
-        .no-teams,
-        .no-games,
-        .no-recent {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 2px dashed #ddd;
         }
 
         /* Team colors */
@@ -1080,157 +1652,57 @@
         .team-11-color { background: #F8C471; }
         .team-12-color { background: #82E0AA; }
 
-        /* Modal styles (same as host) */
-        .results-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .results-modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 10px;
-            padding: 20px;
-            border-top: 1px solid #eee;
-            justify-content: flex-end;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            padding: 5px;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .winner-card {
-            margin: 15px 0;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            padding: 15px;
-        }
-
-        .place-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .place-medal {
-            font-size: 24px;
-        }
-
-        .team-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .team-btn {
-            padding: 10px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .team-btn:hover {
-            border-color: #45B7D1;
-            background: #f0f8ff;
-        }
-
-        .team-btn.selected {
-            border-color: #45B7D1;
-            background: #45B7D1;
-            color: white;
-        }
-
-        .team-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .modal-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .modal-btn.primary {
-            background: #45B7D1;
-            color: white;
-        }
-
-        .modal-btn.primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .modal-btn.secondary {
-            background: #f0f0f0;
-            color: #666;
-        }
-
+        /* Mobile optimizations */
         @media (max-width: 768px) {
-            .tabs {
-                flex-direction: column;
+            .tournament-overview {
+                grid-template-columns: repeat(2, 1fr);
             }
 
-            .tab-btn {
-                text-align: left;
+            .player-actions {
+                flex-direction: column;
+                align-items: center;
             }
 
             .quick-games-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .player-info {
-                grid-template-columns: repeat(2, 1fr);
+            .rules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-filters {
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .team-stats-mini {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tournament-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .quick-games-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-game-btn {
+                padding: 15px;
             }
         }
     </style>
